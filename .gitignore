@@ -1,5 +1,66 @@
+# ====================
+# Vivado Build Files
+# ====================
+*.jou
+*.log
+*.str
+*.debug
+*.xpr
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+vivado*.backup.*
+*.wdb
+
+# Build outputs (keep output/ and reports/ folders for deployment)
+build/
+# output/ - keep for deployment
+# reports/ - keep for deployment
+
+# ====================
+# Documentation & Data Files
+# ====================
 source/constrs/100um_xc7a35tfgg484_Pinmap(251226).xlsx
 source/constrs/XDAQ_100um_schematic(251226).pdf
+source/constrs/XDAQ_100um_schematic*.pdf
+source/constrs/*Pinmap*.xlsx
+source/constrs/COMPLETION_REPORT.md
 source/constrs/top_const.xdc
+*.xlsx
+*.pdf
+!doc/**/*.pdf
+
+# ====================
+# IDE & Editor
+# ====================
+.vscode/
+.claude/
+source/constrs/.claude/
+source/constrs/.claude/settings.local.json
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# ====================
+# Scripts & Temporary
+# ====================
 create_folder.bat
 delete.bat
+*.bak
+*.old
+*.tmp
+
+# ====================
+# Python
+# ====================
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Keep important constraint file
+!source/constrs/cyan_hd_top.xdc
