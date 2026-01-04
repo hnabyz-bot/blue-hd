@@ -1,0 +1,579 @@
+//==============================================================================
+// Module: cyan_hd_top
+// Description: Top-level module for Cyan HD FPGA design (Artix-7 XC7A35T-FGG484)
+//
+// Author: Claude AI Assistant
+// Created: 2026-01-04
+// Version: 1.0.0
+//
+// Version History:
+//   1.0.0 (2026-01-04) - Initial release
+//     - Auto-generated from cyan_hd_top.xdc constraints
+//     - 14-channel LVDS ADC interface (ROIC readout)
+//     - MIPI CSI-2 interface (4 lanes)
+//     - SPI slave interface (CPU control)
+//     - I2C master interface
+//     - Gate driver control outputs
+//
+// Target Device: Xilinx Artix-7 XC7A35T-FGG484-1
+// Board: Blue 100um Custom Board
+//
+// Pin Mapping: See source/constrs/cyan_hd_top.xdc
+//==============================================================================
+
+`timescale 1ns / 1ps
+
+module cyan_hd_top (
+    //==========================================================================
+    // Clock and Reset
+    //==========================================================================
+    // 50 MHz differential input clock
+    input  wire        MCLK_50M_p,
+    input  wire        MCLK_50M_n,
+
+    // Active-low reset
+    input  wire        nRST,
+
+    //==========================================================================
+    // I2C Interface (Master mode for external sensor config)
+    //==========================================================================
+    output wire        scl_out,
+    inout  wire        sda,
+
+    //==========================================================================
+    // ROIC (Readout IC) Control Interface
+    //==========================================================================
+    // ROIC control signals
+    output wire        ROIC_TP_SEL,        // Test pattern select
+    output wire        ROIC_SYNC,          // Synchronization signal
+    output wire        ROIC_MCLK0,         // Master clock output to ROIC
+    output wire        ROIC_AVDD1,         // Analog power control 1
+    output wire        ROIC_AVDD2,         // Analog power control 2
+
+    // ROIC SPI Interface (Master mode for ROIC configuration)
+    output wire        ROIC_SPI_SCK,       // SPI clock
+    output wire        ROIC_SPI_SDI,       // SPI data in (FPGA -> ROIC)
+    input  wire        ROIC_SPI_SDO,       // SPI data out (ROIC -> FPGA)
+
+    //==========================================================================
+    // Gate Driver Interface (Row/Column scanning)
+    //==========================================================================
+    output wire        GF_STV_L,           // Start vertical (Left)
+    output wire        GF_STV_R,           // Start vertical (Right)
+    output wire [1:8]  GF_STV_LR,          // Start vertical intermediate (LR1-LR8)
+    output wire        GF_CPV,             // Clock pulse vertical
+    output wire        GF_OE,              // Output enable
+    output wire [1:8]  GF_XAO,             // Analog output control (XAO_1 to XAO_8)
+
+    //==========================================================================
+    // LVDS ADC Interface - 14 Channels (Ch0-Ch13)
+    //==========================================================================
+    // Channel 0-11 (Original channels)
+    input  wire [0:11] DCLKP,              // Data clock positive
+    input  wire [0:11] DCLKN,              // Data clock negative
+    input  wire [0:11] FCLKP,              // Frame clock positive
+    input  wire [0:11] FCLKN,              // Frame clock negative
+    input  wire [0:11] DOUTP,              // Data output positive
+    input  wire [0:11] DOUTN,              // Data output negative
+
+    // Channel 12-13 (Newly added channels)
+    input  wire [12:13] DCLKP_12_13,       // Data clock positive (Ch12-13)
+    input  wire [12:13] DCLKN_12_13,       // Data clock negative (Ch12-13)
+    input  wire [12:13] FCLKP_12_13,       // Frame clock positive (Ch12-13)
+    input  wire [12:13] FCLKN_12_13,       // Frame clock negative (Ch12-13)
+    input  wire [12:13] DOUTP_12_13,       // Data output positive (Ch12-13)
+    input  wire [12:13] DOUTN_12_13,       // Data output negative (Ch12-13)
+
+    //==========================================================================
+    // MIPI CSI-2 Interface (Camera Serial Interface 2)
+    //==========================================================================
+    // High-speed differential data lanes (4 lanes)
+    input  wire        mipi_phy_if_clk_hs_p,    // HS clock positive
+    input  wire        mipi_phy_if_clk_hs_n,    // HS clock negative
+    input  wire [3:0]  mipi_phy_if_data_hs_p,   // HS data positive [0:3]
+    input  wire [3:0]  mipi_phy_if_data_hs_n,   // HS data negative [0:3]
+
+    // Low-power data lanes
+    input  wire        mipi_phy_if_clk_lp_p,    // LP clock positive
+    input  wire        mipi_phy_if_clk_lp_n,    // LP clock negative
+    input  wire [3:0]  mipi_phy_if_data_lp_p,   // LP data positive [0:3]
+    input  wire [3:0]  mipi_phy_if_data_lp_n,   // LP data negative [0:3]
+
+    //==========================================================================
+    // CPU to FPGA Interface (SPI Slave)
+    //==========================================================================
+    input  wire        SSB,                // SPI slave select (active low)
+    input  wire        SCLK,               // SPI clock
+    input  wire        MOSI,               // Master out, slave in
+    output wire        MISO,               // Master in, slave out
+
+    //==========================================================================
+    // Status LEDs
+    //==========================================================================
+    output wire        STATE_LED1,         // Status LED 1
+    output wire        STATE_LED2,         // Status LED 2
+
+    //==========================================================================
+    // Reserved Handshake Signals (Future use: frame sync, exposure control)
+    //==========================================================================
+    output wire        exp_ack,            // Exposure acknowledge
+    input  wire        exp_req,            // Exposure request
+    output wire        prep_ack,           // Prepare acknowledge
+    input  wire        prep_req            // Prepare request
+);
+
+    //==========================================================================
+    // Internal Clock and Reset Signals
+    //==========================================================================
+    wire clk_50mhz;          // 50 MHz input clock (from IBUFDS)
+    wire clk_100mhz;         // 100 MHz core clock (from MMCM)
+    wire clk_200mhz;         // 200 MHz high-speed clock (for LVDS ISERDES)
+    wire clk_25mhz;          // 25 MHz slow clock (for gate drivers)
+
+    wire mmcm_locked;        // MMCM lock indicator
+    wire rst_n_sync;         // Synchronized reset (active-low)
+
+    //==========================================================================
+    // Module: Differential Clock Input Buffer
+    //==========================================================================
+    // Convert 50 MHz differential clock to single-ended
+    IBUFDS #(
+        .DIFF_TERM("TRUE"),       // Enable differential termination
+        .IBUF_LOW_PWR("FALSE")    // High-performance mode
+    ) ibufds_mclk (
+        .I(MCLK_50M_p),
+        .IB(MCLK_50M_n),
+        .O(clk_50mhz)
+    );
+
+    //==========================================================================
+    // Module: Clock Manager (MMCM)
+    //==========================================================================
+    // Generate multiple clock domains from 50 MHz input
+    clk_wiz_0 clk_inst0 (
+        // Input clock
+        .clk_in1(clk_50mhz),          // 50 MHz input
+
+        // Output clocks
+        .clk_out1(clk_100mhz),        // 100 MHz core clock
+        .clk_out2(clk_200mhz),        // 200 MHz LVDS clock
+        .clk_out3(clk_25mhz),         // 25 MHz gate driver clock
+
+        // Status
+        .locked(mmcm_locked),
+
+        // Reset
+        .reset(~nRST)                 // Active-high reset to MMCM
+    );
+
+    //==========================================================================
+    // Module: Reset Synchronizer
+    //==========================================================================
+    // Synchronize reset release to core clock domain
+    reset_sync u_reset_sync (
+        .clk(clk_100mhz),
+        .async_rst_n(nRST & mmcm_locked),
+        .sync_rst_n(rst_n_sync)
+    );
+
+    //==========================================================================
+    // Internal Signal Declarations
+    //==========================================================================
+
+    // LVDS deserialized data (14 channels total)
+    wire [13:0][11:0] adc_data;        // 12-bit ADC data per channel
+    wire [13:0]       adc_dclk_int;    // Internal data clocks
+    wire [13:0]       adc_fclk_int;    // Internal frame clocks
+    wire [13:0]       adc_data_valid;  // Data valid flags
+
+    // SPI slave interface signals
+    wire [31:0] spi_rx_data;           // Received data from CPU
+    wire [31:0] spi_tx_data;           // Transmit data to CPU
+    wire        spi_rx_valid;          // RX data valid
+    wire        spi_tx_ready;          // TX ready for new data
+
+    // Control registers (from SPI slave)
+    wire [31:0] ctrl_reg0;             // Control register 0
+    wire [31:0] ctrl_reg1;             // Control register 1
+    wire [31:0] status_reg0;           // Status register 0
+    wire [31:0] status_reg1;           // Status register 1
+
+    // Gate driver timing generator
+    wire        gf_stv_pulse;          // STV pulse from timing generator
+    wire        gf_cpv_pulse;          // CPV pulse from timing generator
+    wire        gf_oe_enable;          // OE enable from timing generator
+
+    // MIPI CSI-2 decoded data
+    wire [63:0] mipi_pixel_data;       // Pixel data from MIPI
+    wire        mipi_frame_valid;      // Frame valid
+    wire        mipi_line_valid;       // Line valid
+
+    //==========================================================================
+    // Module: LVDS ADC Interface (Channels 0-13)
+    //==========================================================================
+    // Instantiate 14 LVDS receivers for ADC data
+
+    genvar ch;
+    generate
+        // Channels 0-11 (Original)
+        for (ch = 0; ch < 12; ch = ch + 1) begin : adc_ch_0_11
+            lvds_adc_interface #(
+                .DATA_WIDTH(12),
+                .CHANNEL_ID(ch)
+            ) u_lvds_adc (
+                // Clocks
+                .clk_200mhz(clk_200mhz),       // High-speed clock for ISERDES
+                .clk_100mhz(clk_100mhz),       // Core clock
+                .rst_n(rst_n_sync),
+
+                // LVDS inputs
+                .dclk_p(DCLKP[ch]),
+                .dclk_n(DCLKN[ch]),
+                .fclk_p(FCLKP[ch]),
+                .fclk_n(FCLKN[ch]),
+                .dout_p(DOUTP[ch]),
+                .dout_n(DOUTN[ch]),
+
+                // Parallel output
+                .adc_data(adc_data[ch]),
+                .adc_data_valid(adc_data_valid[ch]),
+                .adc_dclk_int(adc_dclk_int[ch]),
+                .adc_fclk_int(adc_fclk_int[ch])
+            );
+        end
+
+        // Channels 12-13 (Newly added)
+        for (ch = 12; ch < 14; ch = ch + 1) begin : adc_ch_12_13
+            lvds_adc_interface #(
+                .DATA_WIDTH(12),
+                .CHANNEL_ID(ch)
+            ) u_lvds_adc (
+                // Clocks
+                .clk_200mhz(clk_200mhz),
+                .clk_100mhz(clk_100mhz),
+                .rst_n(rst_n_sync),
+
+                // LVDS inputs
+                .dclk_p(DCLKP_12_13[ch]),
+                .dclk_n(DCLKN_12_13[ch]),
+                .fclk_p(FCLKP_12_13[ch]),
+                .fclk_n(FCLKN_12_13[ch]),
+                .dout_p(DOUTP_12_13[ch]),
+                .dout_n(DOUTN_12_13[ch]),
+
+                // Parallel output
+                .adc_data(adc_data[ch]),
+                .adc_data_valid(adc_data_valid[ch]),
+                .adc_dclk_int(adc_dclk_int[ch]),
+                .adc_fclk_int(adc_fclk_int[ch])
+            );
+        end
+    endgenerate
+
+    //==========================================================================
+    // Module: SPI Slave Interface (CPU to FPGA)
+    //==========================================================================
+    spi_slave_controller u_spi_slave (
+        // Clock and reset
+        .clk(clk_100mhz),
+        .rst_n(rst_n_sync),
+
+        // SPI interface
+        .spi_sclk(SCLK),
+        .spi_ssb(SSB),
+        .spi_mosi(MOSI),
+        .spi_miso(MISO),
+
+        // Register interface
+        .ctrl_reg0(ctrl_reg0),
+        .ctrl_reg1(ctrl_reg1),
+        .status_reg0(status_reg0),
+        .status_reg1(status_reg1),
+
+        // Data streaming
+        .rx_data(spi_rx_data),
+        .rx_valid(spi_rx_valid),
+        .tx_data(spi_tx_data),
+        .tx_ready(spi_tx_ready)
+    );
+
+    //==========================================================================
+    // Module: Gate Driver Timing Generator
+    //==========================================================================
+    gate_driver_controller u_gate_driver (
+        // Clock and reset
+        .clk(clk_25mhz),               // 25 MHz for slower gate timing
+        .rst_n(rst_n_sync),
+
+        // Control inputs
+        .enable(ctrl_reg0[0]),         // Enable from SPI control
+        .frame_trigger(exp_req),       // External frame trigger
+
+        // Timing outputs
+        .stv_pulse(gf_stv_pulse),      // Start vertical pulse
+        .cpv_pulse(gf_cpv_pulse),      // Clock pulse vertical
+        .oe_enable(gf_oe_enable),      // Output enable
+
+        // Status
+        .frame_done(prep_ack)
+    );
+
+    //==========================================================================
+    // Module: I2C Master Controller
+    //==========================================================================
+    i2c_master_controller u_i2c_master (
+        // Clock and reset
+        .clk(clk_100mhz),
+        .rst_n(rst_n_sync),
+
+        // I2C interface
+        .scl(scl_out),
+        .sda(sda),
+
+        // Control interface
+        .start(ctrl_reg1[0]),          // I2C start command
+        .slave_addr(ctrl_reg1[15:8]),  // 7-bit slave address
+        .write_data(ctrl_reg1[31:24]), // Write data
+        .read_data(status_reg1[7:0]),  // Read data
+        .busy(status_reg1[31])         // Busy flag
+    );
+
+    //==========================================================================
+    // Module: MIPI CSI-2 RX Controller (Optional - requires license)
+    //==========================================================================
+    // Note: MIPI CSI-2 requires Xilinx MIPI IP core license
+    // Placeholder for future integration
+
+    // Stub: Tie off MIPI signals for now
+    assign mipi_pixel_data = 64'h0;
+    assign mipi_frame_valid = 1'b0;
+    assign mipi_line_valid = 1'b0;
+
+    //==========================================================================
+    // Module: Data Processing Pipeline (Placeholder)
+    //==========================================================================
+    // TODO: Add your custom data processing logic here
+    // - ADC data averaging/filtering
+    // - Image reconstruction from 14-channel ADC data
+    // - Frame buffering to DDR3 (if available)
+    // - Data formatting for MIPI TX output
+
+    data_processing_pipeline u_data_proc (
+        .clk(clk_100mhz),
+        .rst_n(rst_n_sync),
+
+        // ADC inputs (14 channels)
+        .adc_data(adc_data),
+        .adc_valid(adc_data_valid),
+
+        // Processed output (example: average of all channels)
+        .proc_data_out(),              // Connect to output module
+        .proc_data_valid()
+    );
+
+    //==========================================================================
+    // Output Assignments
+    //==========================================================================
+
+    // Gate driver outputs
+    assign GF_STV_L = gf_stv_pulse;
+    assign GF_STV_R = gf_stv_pulse;
+    assign GF_STV_LR = {8{gf_stv_pulse}};  // Broadcast to all LR signals
+    assign GF_CPV = gf_cpv_pulse;
+    assign GF_OE = gf_oe_enable;
+
+    // Analog output control (static for now, configure via SPI)
+    assign GF_XAO = ctrl_reg0[15:8];
+
+    // ROIC control
+    assign ROIC_TP_SEL = ctrl_reg0[16];    // Test pattern select
+    assign ROIC_SYNC = gf_stv_pulse;       // Sync with gate driver
+    assign ROIC_MCLK0 = clk_25mhz;         // Provide 25 MHz clock to ROIC
+    assign ROIC_AVDD1 = ctrl_reg0[17];     // Power control 1
+    assign ROIC_AVDD2 = ctrl_reg0[18];     // Power control 2
+
+    // ROIC SPI (master mode - requires separate SPI master module)
+    assign ROIC_SPI_SCK = 1'b0;            // TODO: Connect to SPI master
+    assign ROIC_SPI_SDI = 1'b0;            // TODO: Connect to SPI master
+
+    // Status LEDs (heartbeat and lock indicator)
+    reg [25:0] led_counter;
+    always_ff @(posedge clk_100mhz or negedge rst_n_sync) begin
+        if (!rst_n_sync)
+            led_counter <= 26'h0;
+        else
+            led_counter <= led_counter + 1;
+    end
+
+    assign STATE_LED1 = led_counter[25];   // ~0.75 Hz heartbeat @ 100 MHz
+    assign STATE_LED2 = mmcm_locked;       // Clock lock indicator
+
+    // Handshake signals
+    assign exp_ack = 1'b1;                 // Always acknowledge exposure request
+    assign prep_ack = 1'b1;                // Always acknowledge prepare request
+
+    //==========================================================================
+    // Status Register Updates
+    //==========================================================================
+    assign status_reg0 = {
+        mmcm_locked,                       // [31] MMCM locked
+        7'h0,                              // [30:24] Reserved
+        |adc_data_valid,                   // [23] Any ADC data valid
+        7'h0,                              // [22:16] Reserved
+        adc_data_valid[13:0],              // [15:2] Individual ADC valid flags
+        2'h0                               // [1:0] Reserved
+    };
+
+    // SPI TX data (example: send first ADC channel data)
+    assign spi_tx_data = {20'h0, adc_data[0]};
+
+endmodule
+
+
+//==============================================================================
+// Helper Module: Reset Synchronizer
+//==============================================================================
+module reset_sync (
+    input  wire clk,
+    input  wire async_rst_n,
+    output reg  sync_rst_n
+);
+    reg rst_sync_ff1;
+
+    always_ff @(posedge clk or negedge async_rst_n) begin
+        if (!async_rst_n) begin
+            rst_sync_ff1 <= 1'b0;
+            sync_rst_n   <= 1'b0;
+        end else begin
+            rst_sync_ff1 <= 1'b1;
+            sync_rst_n   <= rst_sync_ff1;
+        end
+    end
+endmodule
+
+
+//==============================================================================
+// Placeholder Modules (TODO: Implement these)
+//==============================================================================
+
+// LVDS ADC Interface Module (needs ISERDES implementation)
+module lvds_adc_interface #(
+    parameter DATA_WIDTH = 12,
+    parameter CHANNEL_ID = 0
+)(
+    input  wire                  clk_200mhz,
+    input  wire                  clk_100mhz,
+    input  wire                  rst_n,
+    input  wire                  dclk_p,
+    input  wire                  dclk_n,
+    input  wire                  fclk_p,
+    input  wire                  fclk_n,
+    input  wire                  dout_p,
+    input  wire                  dout_n,
+    output wire [DATA_WIDTH-1:0] adc_data,
+    output wire                  adc_data_valid,
+    output wire                  adc_dclk_int,
+    output wire                  adc_fclk_int
+);
+    // TODO: Implement ISERDES-based LVDS receiver
+    // See Section 26.2 of claude-agent-fpga.md for LVDS SERDES implementation
+
+    assign adc_data = 12'h0;
+    assign adc_data_valid = 1'b0;
+    assign adc_dclk_int = 1'b0;
+    assign adc_fclk_int = 1'b0;
+endmodule
+
+// SPI Slave Controller
+module spi_slave_controller (
+    input  wire        clk,
+    input  wire        rst_n,
+    input  wire        spi_sclk,
+    input  wire        spi_ssb,
+    input  wire        spi_mosi,
+    output wire        spi_miso,
+    output wire [31:0] ctrl_reg0,
+    output wire [31:0] ctrl_reg1,
+    input  wire [31:0] status_reg0,
+    input  wire [31:0] status_reg1,
+    output wire [31:0] rx_data,
+    output wire        rx_valid,
+    input  wire [31:0] tx_data,
+    output wire        tx_ready
+);
+    // TODO: Implement SPI slave state machine
+    // See AXI4-Lite slave template in Section 25.5.2 for reference
+
+    assign spi_miso = 1'b0;
+    assign ctrl_reg0 = 32'h0;
+    assign ctrl_reg1 = 32'h0;
+    assign rx_data = 32'h0;
+    assign rx_valid = 1'b0;
+    assign tx_ready = 1'b1;
+endmodule
+
+// Gate Driver Controller
+module gate_driver_controller (
+    input  wire clk,
+    input  wire rst_n,
+    input  wire enable,
+    input  wire frame_trigger,
+    output reg  stv_pulse,
+    output reg  cpv_pulse,
+    output reg  oe_enable,
+    output reg  frame_done
+);
+    // TODO: Implement gate driver timing FSM
+    // See Section 25.5.4 for FSM template
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            stv_pulse <= 1'b0;
+            cpv_pulse <= 1'b0;
+            oe_enable <= 1'b0;
+            frame_done <= 1'b0;
+        end else begin
+            // Placeholder: toggle signals for testing
+            stv_pulse <= enable;
+            cpv_pulse <= enable;
+            oe_enable <= enable;
+            frame_done <= 1'b0;
+        end
+    end
+endmodule
+
+// I2C Master Controller
+module i2c_master_controller (
+    input  wire       clk,
+    input  wire       rst_n,
+    output wire       scl,
+    inout  wire       sda,
+    input  wire       start,
+    input  wire [7:0] slave_addr,
+    input  wire [7:0] write_data,
+    output wire [7:0] read_data,
+    output wire       busy
+);
+    // TODO: Implement I2C master bit-banging or use Xilinx IIC IP
+
+    assign scl = 1'b1;
+    assign sda = 1'bz;
+    assign read_data = 8'h0;
+    assign busy = 1'b0;
+endmodule
+
+// Data Processing Pipeline
+module data_processing_pipeline (
+    input  wire        clk,
+    input  wire        rst_n,
+    input  wire [13:0][11:0] adc_data,
+    input  wire [13:0]       adc_valid,
+    output wire [31:0]       proc_data_out,
+    output wire              proc_data_valid
+);
+    // TODO: Implement your custom image processing
+    // Example: Sum all 14 ADC channels
+
+    assign proc_data_out = 32'h0;
+    assign proc_data_valid = 1'b0;
+endmodule
