@@ -34,9 +34,11 @@ set_property IOSTANDARD LVCMOS25 [get_ports ROIC_SYNC]
 set_property PACKAGE_PIN W21 [get_ports ROIC_SPI_SCK]
 set_property PACKAGE_PIN W22 [get_ports ROIC_SPI_SDI]
 set_property PACKAGE_PIN AA20 [get_ports ROIC_SPI_SDO]
+set_property PACKAGE_PIN Y22 [get_ports ROIC_SPI_SEN_N]
 set_property IOSTANDARD LVCMOS25 [get_ports ROIC_SPI_SCK]
 set_property IOSTANDARD LVCMOS25 [get_ports ROIC_SPI_SDI]
 set_property IOSTANDARD LVCMOS25 [get_ports ROIC_SPI_SDO]
+set_property IOSTANDARD LVCMOS25 [get_ports ROIC_SPI_SEN_N]
 
 # GATE DRIVE
 set_property PACKAGE_PIN Y18 [get_ports GF_STV_L]
