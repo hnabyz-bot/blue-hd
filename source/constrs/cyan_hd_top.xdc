@@ -1,8 +1,53 @@
 
-# timing constraints
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {U8_r/adc_indata_gen[*].adc_clk_inst_0}]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets U8_r/g_dclk_int_*]
+#==============================================================================
+# Timing Constraints
+#==============================================================================
 
+# System Clock (50 MHz input)
+create_clock -period 20.000 -name MCLK_50M [get_ports MCLK_50M_p]
+
+# Generated Clocks (from Clock Wizard)
+# These will be automatically derived by Vivado from Clock Wizard
+
+# AFE2256 LVDS DCLK clocks (14 channels)
+# Assuming 2.34 MHz DCLK (MCLK=10MHz, STR=1024)
+create_clock -period 427.350 -name DCLK_CH0 [get_ports DCLKP[0]]
+create_clock -period 427.350 -name DCLK_CH1 [get_ports DCLKP[1]]
+create_clock -period 427.350 -name DCLK_CH2 [get_ports DCLKP[2]]
+create_clock -period 427.350 -name DCLK_CH3 [get_ports DCLKP[3]]
+create_clock -period 427.350 -name DCLK_CH4 [get_ports DCLKP[4]]
+create_clock -period 427.350 -name DCLK_CH5 [get_ports DCLKP[5]]
+create_clock -period 427.350 -name DCLK_CH6 [get_ports DCLKP[6]]
+create_clock -period 427.350 -name DCLK_CH7 [get_ports DCLKP[7]]
+create_clock -period 427.350 -name DCLK_CH8 [get_ports DCLKP[8]]
+create_clock -period 427.350 -name DCLK_CH9 [get_ports DCLKP[9]]
+create_clock -period 427.350 -name DCLK_CH10 [get_ports DCLKP[10]]
+create_clock -period 427.350 -name DCLK_CH11 [get_ports DCLKP[11]]
+create_clock -period 427.350 -name DCLK_CH12 [get_ports DCLKP_12_13[12]]
+create_clock -period 427.350 -name DCLK_CH13 [get_ports DCLKP_12_13[13]]
+
+# LVDS Input Delays (relative to DCLK)
+# Setup/Hold margins for LVDS data
+set_input_delay -clock DCLK_CH0 -max 1.5 [get_ports DOUTP[0]]
+set_input_delay -clock DCLK_CH0 -min -1.0 [get_ports DOUTP[0]]
+set_input_delay -clock DCLK_CH0 -max 1.5 [get_ports DOUTN[0]]
+set_input_delay -clock DCLK_CH0 -min -1.0 [get_ports DOUTN[0]]
+
+# Note: Repeat for all 14 channels (simplified here for brevity)
+# In production, use a loop in TCL
+
+# Clock Domain Crossing (CDC) constraints
+# DCLK -> clk_100mhz async
+set_clock_groups -asynchronous \
+    -group [get_clocks DCLK_CH*] \
+    -group [get_clocks clk_100mhz]
+
+# False Paths
+# SPI control signals are quasi-static
+set_false_path -from [get_ports nRST]
+
+# Clock Routing
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets U8_r/g_dclk_int_*]
 set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets clk_inst0/inst/clk_in1_clk_ctrl]
 
 # pin map

@@ -54,6 +54,7 @@ module cyan_hd_top (
     output wire        ROIC_SPI_SCK,       // SPI clock
     output wire        ROIC_SPI_SDI,       // SPI data in (FPGA -> ROIC)
     input  wire        ROIC_SPI_SDO,       // SPI data out (ROIC -> FPGA)
+    output wire        ROIC_SPI_SEN_N,     // Chip select (Active LOW)
 
     //==========================================================================
     // Gate Driver Interface (Row/Column scanning)
@@ -209,66 +210,100 @@ module cyan_hd_top (
     wire        mipi_line_valid;       // Line valid
 
     //==========================================================================
-    // Module: LVDS ADC Interface (Channels 0-13)
+    // Module: AFE2256 LVDS Receiver (14 Channels)
     //==========================================================================
-    // Instantiate 14 LVDS receivers for ADC data
+    // Import AFE2256 packages
+    import afe2256_lvds_pkg::*;
+    import afe2256_spi_pkg::*;
 
-    genvar ch;
-    generate
-        // Channels 0-11 (Original)
-        for (ch = 0; ch < 12; ch = ch + 1) begin : adc_ch_0_11
-            lvds_adc_interface #(
-                .DATA_WIDTH(12),
-                .CHANNEL_ID(ch)
-            ) u_lvds_adc (
-                // Clocks
-                .clk_200mhz(clk_200mhz),       // High-speed clock for ISERDES
-                .clk_100mhz(clk_100mhz),       // Core clock
-                .rst_n(rst_n_sync),
+    // AFE2256 LVDS receiver signals
+    wire [13:0][11:0] afe2256_pixel_data;
+    wire [13:0][11:0] afe2256_align_vector;
+    wire [13:0]       afe2256_pixel_valid;
+    wire [13:0]       afe2256_line_start;
+    wire [13:0]       afe2256_frame_start;
+    wire [13:0]       afe2256_ch_locked;
+    wire [13:0]       afe2256_ch_aligned;
+    wire [13:0][3:0]  afe2256_ch_errors;
 
-                // LVDS inputs
-                .dclk_p(DCLKP[ch]),
-                .dclk_n(DCLKN[ch]),
-                .fclk_p(FCLKP[ch]),
-                .fclk_n(FCLKN[ch]),
-                .dout_p(DOUTP[ch]),
-                .dout_n(DOUTN[ch]),
+    // Combine 14 channels (12 original + 2 new)
+    wire [13:0] dclk_p_combined = {DCLKP_12_13, DCLKP};
+    wire [13:0] dclk_n_combined = {DCLKN_12_13, DCLKN};
+    wire [13:0] fclk_p_combined = {FCLKP_12_13, FCLKP};
+    wire [13:0] fclk_n_combined = {FCLKN_12_13, FCLKN};
+    wire [13:0] dout_p_combined = {DOUTP_12_13, DOUTP};
+    wire [13:0] dout_n_combined = {DOUTN_12_13, DOUTN};
 
-                // Parallel output
-                .adc_data(adc_data[ch]),
-                .adc_data_valid(adc_data_valid[ch]),
-                .adc_dclk_int(adc_dclk_int[ch]),
-                .adc_fclk_int(adc_fclk_int[ch])
-            );
-        end
+    afe2256_lvds_receiver #(
+        .NUM_CHANNELS(14)
+    ) u_afe2256_lvds (
+        // System interface
+        .clk_sys      (clk_100mhz),
+        .rst_n        (rst_n_sync),
 
-        // Channels 12-13 (Newly added)
-        for (ch = 12; ch < 14; ch = ch + 1) begin : adc_ch_12_13
-            lvds_adc_interface #(
-                .DATA_WIDTH(12),
-                .CHANNEL_ID(ch)
-            ) u_lvds_adc (
-                // Clocks
-                .clk_200mhz(clk_200mhz),
-                .clk_100mhz(clk_100mhz),
-                .rst_n(rst_n_sync),
+        // LVDS differential inputs
+        .dclk_p       (dclk_p_combined),
+        .dclk_n       (dclk_n_combined),
+        .fclk_p       (fclk_p_combined),
+        .fclk_n       (fclk_n_combined),
+        .dout_p       (dout_p_combined),
+        .dout_n       (dout_n_combined),
 
-                // LVDS inputs
-                .dclk_p(DCLKP_12_13[ch]),
-                .dclk_n(DCLKN_12_13[ch]),
-                .fclk_p(FCLKP_12_13[ch]),
-                .fclk_n(FCLKN_12_13[ch]),
-                .dout_p(DOUTP_12_13[ch]),
-                .dout_n(DOUTN_12_13[ch]),
+        // Parallel pixel output
+        .pixel_data   (afe2256_pixel_data),
+        .align_vector (afe2256_align_vector),
+        .pixel_valid  (afe2256_pixel_valid),
+        .line_start   (afe2256_line_start),
+        .frame_start  (afe2256_frame_start),
 
-                // Parallel output
-                .adc_data(adc_data[ch]),
-                .adc_data_valid(adc_data_valid[ch]),
-                .adc_dclk_int(adc_dclk_int[ch]),
-                .adc_fclk_int(adc_fclk_int[ch])
-            );
-        end
-    endgenerate
+        // Status signals
+        .ch_locked    (afe2256_ch_locked),
+        .ch_aligned   (afe2256_ch_aligned),
+        .ch_errors    (afe2256_ch_errors)
+    );
+
+    // Map to legacy signals for compatibility
+    assign adc_data = afe2256_pixel_data;
+    assign adc_data_valid = afe2256_pixel_valid;
+
+    //==========================================================================
+    // Module: AFE2256 SPI Master Controller
+    //==========================================================================
+    // AFE2256 SPI signals
+    wire       afe2256_spi_busy;
+    wire       afe2256_spi_done;
+    wire [7:0] afe2256_reg_addr;
+    wire [15:0] afe2256_reg_wdata;
+    wire       afe2256_reg_wr;
+
+    afe2256_spi_controller #(
+        .NUM_ROICS     (1),           // Single ROIC for now
+        .CLK_FREQ_MHZ  (100),
+        .SPI_FREQ_MHZ  (10)
+    ) u_afe2256_spi (
+        // Clock and reset
+        .clk           (clk_100mhz),
+        .rst_n         (rst_n_sync),
+
+        // Register write interface
+        .reg_addr      (afe2256_reg_addr),
+        .reg_wdata     (afe2256_reg_wdata),
+        .reg_wr        (afe2256_reg_wr),
+        .busy          (afe2256_spi_busy),
+        .done          (afe2256_spi_done),
+
+        // SPI physical interface
+        .spi_sck       (ROIC_SPI_SCK),
+        .spi_sdi       (ROIC_SPI_SDI),
+        .spi_sdo       (ROIC_SPI_SDO),
+        .spi_sen_n     (ROIC_SPI_SEN_N)
+    );
+
+    // TODO: Add AFE2256 initialization FSM
+    // Placeholder: Tie off for now
+    assign afe2256_reg_addr = ctrl_reg0[7:0];
+    assign afe2256_reg_wdata = ctrl_reg0[23:8];
+    assign afe2256_reg_wr = ctrl_reg0[31];
 
     //==========================================================================
     // Module: SPI Slave Interface (CPU to FPGA)
