@@ -4,7 +4,7 @@
 **타겟**: Xilinx Artix-7 XC7A35T-FGG484-1
 **ROIC**: TI AFE2256 (1-16개 확장 가능)
 **작성일**: 2026-01-04
-**버전**: v1.2
+**버전**: v1.3 (2026-01-07 업데이트)
 
 ---
 
@@ -21,6 +21,10 @@
 9. [위험 요소 및 대응](#9-위험-요소-및-대응)
 10. [AFE2256 ROIC 상세 분석](#10-afe2256-roic-상세-분석)
 11. [부록](#11-부록)
+    - 11.1 [개발 환경](#111-개발-환경)
+    - 11.2 [참고 문서](#112-참고-문서)
+    - 11.3 [용어 정의](#113-용어-정의)
+    - 11.4 [버전 이력](#114-버전-이력)
 
 ---
 
@@ -1103,15 +1107,70 @@ IDLE → POWER_ON (전원 시퀀스)
 
 ## 11. 부록
 
-### 11.1 참고 문서
+### 11.1 개발 환경
+
+#### 11.1.1 Xilinx 툴 설치 경로
+```
+D:\Xilinx\
+```
+
+**설치된 툴:**
+- Vivado Design Suite (버전: 확인 필요)
+- Vivado Simulator (xsim)
+- Vivado Synthesis
+- Vivado Implementation
+
+**환경 변수 설정 (필요 시):**
+```bash
+set XILINX_ROOT=D:\Xilinx
+```
+
+**TCL 스크립트에서 사용:**
+```tcl
+# Vivado 프로젝트 생성 시
+set xilinx_root "D:/Xilinx"
+
+# IP 생성 스크립트
+source D:/Xilinx/Vivado/<version>/scripts/vivado_init.tcl
+```
+
+#### 11.1.2 시뮬레이션 환경
+- **시뮬레이터**: Vivado Simulator (xsim)
+- **테스트벤치 위치**: `./simulation/tb_src/`
+- **시뮬레이션 스크립트**: `./simulation/run_sim.tcl`
+
+**시뮬레이션 실행 예:**
+```bash
+cd simulation
+vivado -mode batch -source run_sim.tcl
+```
+
+#### 11.1.3 합성/구현 환경
+- **타겟 디바이스**: XC7A35T-FGG484-1
+- **합성 전략**: Flow_PerfOptimized_high
+- **구현 전략**: Performance_ExplorePostRoutePhysOpt
+- **IP 디렉토리**: `./source/ip/`
+- **제약 파일**: `./source/constrs/cyan_hd_top.xdc`
+
+**프로젝트 생성 스크립트:**
+```tcl
+# scripts/create_project.tcl (향후 작성 예정)
+set project_name "cyan_hd"
+set project_dir "./vivado_project"
+set part "xc7a35tfgg484-1"
+```
+
+### 11.2 참고 문서
 1. [claude-agent-fpga.md](claude-agent-fpga.md) - FPGA 설계 가이드
 2. [cyan_hd_top.xdc](../source/constrs/cyan_hd_top.xdc) - 핀 제약 조건
 3. UG471 - 7 Series SelectIO User Guide
 4. UG949 - UltraFast Design Methodology Guide
-5. AFE2256 Datasheet - SBAS755B (Texas Instruments)
-6. AFE2256 Firmware Documentation v2.1
+5. UG903 - Vivado Design Suite User Guide: Using Constraints
+6. UG835 - Vivado Design Suite Tcl Command Reference Guide
+7. AFE2256 Datasheet - SBAS755B (Texas Instruments)
+8. AFE2256 Firmware Documentation v2.1
 
-### 11.2 용어 정의
+### 11.3 용어 정의
 - **ROIC**: Readout Integrated Circuit (읽기 전용 집적회로)
 - **AFE**: Analog Front-End (아날로그 프론트엔드)
 - **LVDS**: Low-Voltage Differential Signaling
@@ -1121,12 +1180,13 @@ IDLE → POWER_ON (전원 시퀀스)
 - **TPα/TPβ**: Timing Profile Alpha/Beta (타이밍 프로필 α/β)
 - **STR**: Scan Time Range (스캔 시간 범위)
 
-### 11.3 버전 이력
+### 11.4 버전 이력
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |------|------|-----------|--------|
 | v1.0 | 2026-01-04 | 초안 작성 | Claude AI |
 | v1.1 | 2026-01-04 | AFE2256 ROIC 상세 분석 추가 (섹션 10) | Claude AI |
 | v1.2 | 2026-01-04 | LVDS/SPI 인터페이스 상세 사양 추가 (ISERDES2, SPI FSM, 비트 정렬, 초기화 시퀀스) | Claude AI |
+| v1.3 | 2026-01-07 | 개발 환경 정보 추가 (Xilinx 툴 경로, 시뮬레이션/합성 환경) | Claude AI |
 
 ---
 
