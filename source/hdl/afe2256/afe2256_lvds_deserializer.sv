@@ -49,8 +49,7 @@ module afe2256_lvds_deserializer
 
     // Clock management
     wire ioclk;          // IO clock (same as DCLK)
-    wire clkdiv;         // Divided clock (DCLK/4)
-    wire clkdiv_buf;     // Buffered divided clock
+    wire clkdiv;         // Divided clock (DCLK/4) from BUFR
 
     // ISERDES2 outputs
     wire [3:0] iserdes_data;
@@ -108,6 +107,9 @@ module afe2256_lvds_deserializer
     );
 
     // Regional Clock Buffer with divider (DCLK/4)
+    // BUFR output is used directly (regional clock, no BUFG)
+    // This saves BUFG resources (14 channels × 1 BUFG = 14 saved)
+    // Deserializer and Reconstructor must be in same clock region
     BUFR #(
         .BUFR_DIVIDE("4"),
         .SIM_DEVICE("7SERIES")
@@ -118,14 +120,8 @@ module afe2256_lvds_deserializer
         .CE  (1'b1)
     );
 
-    // Global clock buffer for clkdiv
-    BUFG bufg_clkdiv (
-        .I (clkdiv),
-        .O (clkdiv_buf)
-    );
-
-    // Export clkdiv
-    assign clkdiv_out = clkdiv_buf;
+    // Export clkdiv directly from BUFR (regional clock)
+    assign clkdiv_out = clkdiv;
 
     //==========================================================================
     // ISERDES2 for DOUT (Data Deserialization)
@@ -141,7 +137,7 @@ module afe2256_lvds_deserializer
         .D          (dout_buf),         // Serial data input
         .CLK0       (ioclk),            // IO clock
         .CLK1       (~ioclk),           // Inverted IO clock
-        .CLKDIV     (clkdiv_buf),       // Divided clock
+        .CLKDIV     (clkdiv),           // Divided clock from BUFR
         .IOCE       (1'b1),             // IO clock enable
         .RST        (~rst_n),           // Active HIGH reset
         .BITSLIP    (bitslip),          // Bit alignment control
@@ -172,7 +168,7 @@ module afe2256_lvds_deserializer
         .D          (fclk_buf),
         .CLK0       (ioclk),
         .CLK1       (~ioclk),
-        .CLKDIV     (clkdiv_buf),
+        .CLKDIV     (clkdiv),           // Divided clock from BUFR
         .IOCE       (1'b1),
         .RST        (~rst_n),
         .BITSLIP    (1'b0),
@@ -194,7 +190,7 @@ module afe2256_lvds_deserializer
 
     deser_state_t align_state;
 
-    always_ff @(posedge clkdiv_buf or negedge rst_n) begin
+    always_ff @(posedge clkdiv or negedge rst_n) begin
         if (!rst_n) begin
             align_state       <= IDLE;
             bitslip           <= 1'b0;
@@ -267,7 +263,7 @@ module afe2256_lvds_deserializer
     // Frame Clock Edge Detection
     //==========================================================================
 
-    always_ff @(posedge clkdiv_buf or negedge rst_n) begin
+    always_ff @(posedge clkdiv or negedge rst_n) begin
         if (!rst_n) begin
             fclk_shift_reg     <= 12'h000;
             fclk_edge_detected <= 1'b0;
@@ -309,7 +305,7 @@ module afe2256_lvds_deserializer
     // Output Assignment
     //==========================================================================
 
-    always_ff @(posedge clkdiv_buf or negedge rst_n) begin
+    always_ff @(posedge clkdiv or negedge rst_n) begin
         if (!rst_n) begin
             data_out    <= 4'h0;
             data_valid  <= 1'b0;
@@ -327,7 +323,7 @@ module afe2256_lvds_deserializer
     // Error Flags
     //==========================================================================
 
-    always_ff @(posedge clkdiv_buf or negedge rst_n) begin
+    always_ff @(posedge clkdiv or negedge rst_n) begin
         if (!rst_n) begin
             error_flags <= 4'h0;
         end else begin
