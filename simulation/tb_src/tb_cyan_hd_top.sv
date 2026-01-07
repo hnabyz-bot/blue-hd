@@ -76,6 +76,38 @@ module tb_cyan_hd_top;
     wire prep_ack;         // Prepare acknowledge (output)
 
     //==========================================================================
+    // AFE2256 ROIC Behavioral Model
+    //==========================================================================
+    afe2256_model afe_model (
+        // Control inputs from FPGA (DUT outputs)
+        .ROIC_TP_SEL(ROIC_TP_SEL),
+        .ROIC_SYNC(ROIC_SYNC),
+        .ROIC_MCLK0(ROIC_MCLK0),
+        .ROIC_AVDD1(ROIC_AVDD1),
+        .ROIC_AVDD2(ROIC_AVDD2),
+
+        // SPI slave (receives commands from DUT)
+        .ROIC_SPI_SCK(ROIC_SPI_SCK),
+        .ROIC_SPI_SDI(ROIC_SPI_SDI),
+        .ROIC_SPI_SDO(ROIC_SPI_SDO),
+        .ROIC_SPI_SEN_N(ROIC_SPI_SEN_N),
+
+        // LVDS outputs to DUT inputs
+        .DCLKP(DCLKP),
+        .DCLKN(DCLKN),
+        .FCLKP(FCLKP),
+        .FCLKN(FCLKN),
+        .DOUTP(DOUTP),
+        .DOUTN(DOUTN),
+        .DCLKP_12_13(DCLKP_12_13),
+        .DCLKN_12_13(DCLKN_12_13),
+        .FCLKP_12_13(FCLKP_12_13),
+        .FCLKN_12_13(FCLKN_12_13),
+        .DOUTP_12_13(DOUTP_12_13),
+        .DOUTN_12_13(DOUTN_12_13)
+    );
+
+    //==========================================================================
     // DUT Instantiation
     //==========================================================================
     cyan_hd_top dut (
@@ -208,15 +240,14 @@ module tb_cyan_hd_top;
         $display("Channels: 14 LVDS ADC");
         $display("");
 
-        // Initialize
+        // Initialize testbench signals
         nRST = 0;
-        ROIC_SPI_SDO = 0;
         SSB = 1;           // SPI slave select inactive
         SCLK = 0;
         MOSI = 0;
         exp_req = 0;       // Exposure request inactive
 
-        // Initialize MIPI signals
+        // Initialize MIPI signals (external interface - not from AFE2256)
         mipi_phy_if_clk_hs_p = 0;
         mipi_phy_if_clk_hs_n = 1;
         mipi_phy_if_data_hs_p = 4'b0000;
@@ -226,19 +257,8 @@ module tb_cyan_hd_top;
         mipi_phy_if_data_lp_p = 4'b0000;
         mipi_phy_if_data_lp_n = 4'b0000;
 
-        // Initialize LVDS frame clocks
-        for (int i = 0; i < 12; i++) begin
-            FCLKP[i] = 0;
-            FCLKN[i] = 1;
-            DOUTP[i] = 0;
-            DOUTN[i] = 1;
-        end
-        for (int i = 12; i <= 13; i++) begin
-            FCLKP_12_13[i] = 0;
-            FCLKN_12_13[i] = 1;
-            DOUTP_12_13[i] = 0;
-            DOUTN_12_13[i] = 1;
-        end
+        // NOTE: LVDS signals (DCLK, FCLK, DOUT) are driven by AFE2256 model
+        // No initialization needed here
 
         // Wait for clocks to stabilize
         #(CLK_50M_PERIOD * 10);
