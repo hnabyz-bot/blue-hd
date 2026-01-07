@@ -279,9 +279,9 @@ module tb_cyan_hd_top;
                 end
 
                 // Data pattern: 0xAA55 (alternating pattern)
-                for (int bit = 0; bit < 16; bit++) begin
+                for (int b = 0; b < 16; b++) begin
                     @(posedge DCLKP[0]);
-                    if (bit % 2 == 0) begin
+                    if (b % 2 == 0) begin
                         DOUTP[0] = 1;
                         DOUTN[0] = 0;
                     end else begin
@@ -338,10 +338,10 @@ module tb_cyan_hd_top;
                     fork
                         automatic int channel = ch;
                         begin
-                            for (int bit = 0; bit < 8; bit++) begin
+                            for (int b = 0; b < 8; b++) begin
                                 @(posedge DCLKP[channel]);
-                                DOUTP[channel] = bit[0];
-                                DOUTN[channel] = ~bit[0];
+                                DOUTP[channel] = b[0];
+                                DOUTN[channel] = ~b[0];
                             end
                         end
                     join_none
@@ -355,10 +355,10 @@ module tb_cyan_hd_top;
                     fork
                         automatic int channel = ch;
                         begin
-                            for (int bit = 0; bit < 8; bit++) begin
+                            for (int b = 0; b < 8; b++) begin
                                 @(posedge DCLKP_12_13[channel]);
-                                DOUTP_12_13[channel] = bit[0];
-                                DOUTN_12_13[channel] = ~bit[0];
+                                DOUTP_12_13[channel] = b[0];
+                                DOUTN_12_13[channel] = ~b[0];
                             end
                         end
                     join_none
