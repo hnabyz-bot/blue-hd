@@ -50,15 +50,19 @@ module afe2256_model #(
     reg [7:0] spi_bit_count;
     reg [7:0] config_regs [0:255];  // 256 configuration registers
 
-    // Configuration register addresses (example)
+    // Configuration register addresses (from afe2256_spi_pkg.sv)
     localparam ADDR_RESET = 8'h00;
-    localparam ADDR_MODE = 8'h01;
-    localparam ADDR_GAIN = 8'h10;
-    localparam ADDR_OFFSET = 8'h20;
-    localparam ADDR_TEST_PATTERN = 8'h30;
+    localparam ADDR_TEST_PATTERN = 8'h10;
+    localparam ADDR_STR = 8'h11;
+    localparam ADDR_POWER_DOWN = 8'h13;
+    localparam ADDR_TRIM_LOAD = 8'h30;
+    localparam ADDR_INPUT_RANGE = 8'h5C;
+    localparam ADDR_POWER_MODE = 8'h5D;
+    localparam ADDR_INTG_MODE = 8'h5E;
 
     reg [15:0] test_pattern_value;
     reg test_pattern_enable;
+    reg [4:0] test_pattern_sel;  // TEST_PATTERN_SEL[9:5]
     reg [1:0] operation_mode;  // 0=normal, 1=test, 2=sleep
 
     //==========================================================================
@@ -99,10 +103,10 @@ module afe2256_model #(
     //==========================================================================
     // SPI Slave Interface
     //==========================================================================
-    // SPI Format: 24-bit transactions
-    // [23:22] = Operation (00=write, 01=read)
-    // [21:16] = Address (6 bits)
+    // SPI Format: 24-bit transactions (per AFE2256 datasheet)
+    // [23:16] = Address (8 bits)
     // [15:0]  = Data (16 bits)
+    // Write-only protocol (no read operation)
 
     always @(posedge ROIC_SPI_SCK or posedge ROIC_SPI_SEN_N) begin
         if (ROIC_SPI_SEN_N) begin
@@ -124,46 +128,98 @@ module afe2256_model #(
 
     // Process SPI command
     task process_spi_command(input [23:0] cmd);
-        reg [1:0] operation;
         reg [7:0] address;
         reg [15:0] data;
     begin
-        operation = cmd[23:22];
-        address = cmd[21:14];
-        data = cmd[13:0];
+        // AFE2256 format: [23:16]=Address, [15:0]=Data
+        address = cmd[23:16];
+        data = cmd[15:0];
 
-        case (operation)
-            2'b00: begin  // Write
-                config_regs[address] <= data[7:0];
+        // Store in config registers (split 16-bit data into 2 bytes)
+        config_regs[address] <= data[15:8];
+        config_regs[address+1] <= data[7:0];
 
-                // Update internal state based on register writes
-                case (address)
-                    ADDR_RESET: begin
-                        if (data[0]) begin
-                            // Reset command
-                            test_pattern_enable <= 0;
-                            operation_mode <= 2'b00;
-                        end
+        // Update internal state based on register writes
+        case (address)
+            ADDR_RESET: begin
+                if (data[0]) begin
+                    // RESET[0]=1: Soft reset
+                    test_pattern_enable <= 0;
+                    operation_mode <= 2'b00;
+                    $display("[AFE2256] RESET command received");
+                end
+            end
+
+            ADDR_TEST_PATTERN: begin
+                // TEST_PATTERN_SEL[9:5] in data[9:5]
+                test_pattern_sel <= data[9:5];
+                case (data[9:5])
+                    5'h00: begin  // Normal mode
+                        test_pattern_enable <= 0;
+                        $display("[AFE2256] Test pattern: NORMAL");
                     end
-
-                    ADDR_MODE: begin
-                        operation_mode <= data[1:0];
+                    5'h11: begin  // Row/Column pattern
+                        test_pattern_enable <= 1;
+                        test_pattern_value <= 16'hAAAA;  // Alternating pattern
+                        $display("[AFE2256] Test pattern: ROW/COLUMN (0xAAAA)");
                     end
-
-                    ADDR_TEST_PATTERN: begin
-                        test_pattern_enable <= data[0];
-                        test_pattern_value <= data[15:0];
+                    5'h13: begin  // Ramp pattern
+                        test_pattern_enable <= 1;
+                        test_pattern_value <= 16'h0000;  // Will increment
+                        $display("[AFE2256] Test pattern: RAMP");
+                    end
+                    5'h17: begin  // All zeros
+                        test_pattern_enable <= 1;
+                        test_pattern_value <= 16'h0000;
+                        $display("[AFE2256] Test pattern: ALL ZEROS");
+                    end
+                    5'h19: begin  // All ones
+                        test_pattern_enable <= 1;
+                        test_pattern_value <= 16'hFFFF;
+                        $display("[AFE2256] Test pattern: ALL ONES");
+                    end
+                    5'h1E: begin  // Sync/deskew pattern (0xFFF000)
+                        test_pattern_enable <= 1;
+                        test_pattern_value <= 16'hFFF0;  // High 12 bits = FFF
+                        $display("[AFE2256] Test pattern: SYNC/DESKEW (0xFFF000)");
+                    end
+                    default: begin
+                        test_pattern_enable <= 0;
+                        $display("[AFE2256] Test pattern: Unknown (0x%02X)", data[9:5]);
                     end
                 endcase
-
-                $display("[AFE2256] SPI Write: Addr=0x%02X, Data=0x%04X", address, data);
             end
 
-            2'b01: begin  // Read
-                ROIC_SPI_SDO <= config_regs[address][7];
-                $display("[AFE2256] SPI Read: Addr=0x%02X, Data=0x%02X", address, config_regs[address]);
+            ADDR_POWER_DOWN: begin
+                if (data[15:5] == 11'h7FF) begin
+                    operation_mode <= 2'b10;  // Sleep
+                    $display("[AFE2256] Power mode: SLEEP");
+                end else begin
+                    operation_mode <= 2'b00;  // Active
+                    $display("[AFE2256] Power mode: ACTIVE (0x%04X)", data);
+                end
+            end
+
+            ADDR_TRIM_LOAD: begin
+                if (data[1]) begin
+                    $display("[AFE2256] TRIM_LOAD executed");
+                end
+            end
+
+            ADDR_STR: begin
+                $display("[AFE2256] STR config: 0x%04X (STR[5:4]=%0d)", data, data[5:4]);
+            end
+
+            ADDR_INPUT_RANGE: begin
+                $display("[AFE2256] Input range: 0x%04X (CHARGE_RANGE[15:11]=%0d)", data, data[15:11]);
+            end
+
+            default: begin
+                // Other registers - just store
             end
         endcase
+
+        $display("[AFE2256] SPI Write: Addr=0x%02X, Data=0x%04X", address, data);
     end
     endtask
 
@@ -213,40 +269,49 @@ module afe2256_model #(
         end
     end
 
-    // Generate pixel data
+    // Generate pixel data (12-bit per AFE2256 spec)
     always @(posedge DCLKP[0]) begin
         if (frame_active && pixel_count < PIXELS_PER_CHANNEL) begin
-            // Generate test pattern or simulated pixel data
+            // Generate test pattern or simulated pixel data (12-bit)
             for (int ch = 0; ch < 14; ch++) begin
                 if (test_pattern_enable) begin
-                    current_pixel_data[ch] = test_pattern_value;
+                    // Use configured test pattern
+                    if (test_pattern_sel == 5'h13) begin
+                        // Ramp pattern: increment per pixel
+                        current_pixel_data[ch] = pixel_count[11:0] + ch;
+                    end else begin
+                        // Fixed pattern (upper 12 bits of test_pattern_value)
+                        current_pixel_data[ch] = test_pattern_value[15:4];
+                    end
                 end else if (ROIC_TP_SEL) begin
-                    // Ramp test pattern
-                    current_pixel_data[ch] = pixel_count[13:0] + ch;
+                    // External test pattern request
+                    current_pixel_data[ch] = pixel_count[11:0] + ch;
                 end else begin
-                    // Simulated sensor data (simple noise + offset)
-                    current_pixel_data[ch] = 14'h0800 + ($random % 256);
+                    // Simulated sensor data: offset (2048) + small noise
+                    current_pixel_data[ch] = 12'h800 + ($random % 128);
                 end
             end
 
-            // Output differential data on channels 0-11
+            // Output differential data bit-serially on channels 0-11
+            // AFE2256 outputs 24 bits per pixel: 12-bit pixel + 12-bit alignment vector
+            // For now, simplified: output pixel data MSB first
             for (int ch = 0; ch < 12; ch++) begin
-                DOUTP[ch] <= current_pixel_data[ch][pixel_count % 14];
-                DOUTN[ch] <= ~current_pixel_data[ch][pixel_count % 14];
+                DOUTP[ch] <= current_pixel_data[ch][11 - (pixel_count % 12)];
+                DOUTN[ch] <= ~current_pixel_data[ch][11 - (pixel_count % 12)];
             end
 
             // Output differential data on channels 12-13
             for (int ch = 12; ch <= 13; ch++) begin
-                DOUTP_12_13[ch] <= current_pixel_data[ch][pixel_count % 14];
-                DOUTN_12_13[ch] <= ~current_pixel_data[ch][pixel_count % 14];
+                DOUTP_12_13[ch] <= current_pixel_data[ch][11 - (pixel_count % 12)];
+                DOUTN_12_13[ch] <= ~current_pixel_data[ch][11 - (pixel_count % 12)];
             end
 
             pixel_count <= pixel_count + 1;
 
-            // End of frame
-            if (pixel_count == PIXELS_PER_CHANNEL - 1) begin
+            // End of frame (256 pixels per channel)
+            if (pixel_count >= PIXELS_PER_CHANNEL - 1) begin
                 frame_active <= 0;
-                $display("[AFE2256] Frame end at time %0t (pixels=%0d)", $time, pixel_count);
+                $display("[AFE2256] Frame end at time %0t (pixels=%0d)", $time, pixel_count+1);
             end
         end
     end
