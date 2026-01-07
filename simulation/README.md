@@ -4,6 +4,8 @@
 
 This directory contains all simulation-related files for the Cyan HD FPGA project.
 
+**Latest Status**: See [SIMULATION_STATUS.md](SIMULATION_STATUS.md) for current issues and solutions.
+
 ## Directory Structure
 
 ```
@@ -191,10 +193,12 @@ Key signals to observe:
 
 ## Known Limitations
 
-1. **Vivado License Required**: xsim execution needs Vivado installation
-2. **No Open-Source Alternative**: iverilog not installed
+1. **Batch Mode Simulation**: Known issue with PATH environment - Use Vivado GUI instead
+2. **Vivado License Required**: xsim execution needs Vivado installation
 3. **LVDS Testbench**: Not yet created (planned)
-4. **Top-Level Integration**: Not yet created (planned)
+4. **Clock Domain Crossing**: Not yet verified (planned)
+
+See [SIMULATION_STATUS.md](SIMULATION_STATUS.md) for detailed workarounds.
 
 ## Adding New Testbenches
 
