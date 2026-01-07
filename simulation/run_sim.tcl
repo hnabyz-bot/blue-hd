@@ -17,13 +17,13 @@ create_project $design_name $sim_dir -part xc7a35tfgg484-1 -force
 
 # Add source files
 add_files -fileset sources_1 [list \
-    "../hdl/afe2256/afe2256_spi_pkg.sv" \
-    "../hdl/afe2256/afe2256_spi_controller.sv"
+    "../source/hdl/afe2256/afe2256_spi_pkg.sv" \
+    "../source/hdl/afe2256/afe2256_spi_controller.sv"
 ]
 
 # Add simulation files
 add_files -fileset sim_1 [list \
-    "tb_afe2256_spi.sv"
+    "tb_src/tb_afe2256_spi.sv"
 ]
 
 # Set top module
