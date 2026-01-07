@@ -70,8 +70,10 @@ module tb_cyan_hd_top;
     // Status LEDs
     wire STATE_LED1, STATE_LED2;
 
-    // Handshake signals
-    wire exp_ack, exp_sof;
+    // Handshake signals (actual ports from cyan_hd_top)
+    wire exp_ack;          // Exposure acknowledge (output)
+    logic exp_req;         // Exposure request (input)
+    wire prep_ack;         // Prepare acknowledge (output)
 
     //==========================================================================
     // DUT Instantiation
@@ -147,7 +149,8 @@ module tb_cyan_hd_top;
         .STATE_LED2(STATE_LED2),
 
         .exp_ack(exp_ack),
-        .exp_sof(exp_sof)
+        .exp_req(exp_req),
+        .prep_ack(prep_ack)
     );
 
     //==========================================================================
@@ -211,6 +214,7 @@ module tb_cyan_hd_top;
         SSB = 1;           // SPI slave select inactive
         SCLK = 0;
         MOSI = 0;
+        exp_req = 0;       // Exposure request inactive
 
         // Initialize MIPI signals
         mipi_phy_if_clk_hs_p = 0;
