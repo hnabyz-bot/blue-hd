@@ -126,45 +126,33 @@ module cyan_hd_top (
     //==========================================================================
     // Internal Clock and Reset Signals
     //==========================================================================
-    wire clk_50mhz;          // 50 MHz input clock (from IBUFDS)
-    wire clk_100mhz;         // 100 MHz core clock (from MMCM)
+    wire clk_100mhz;         // 100 MHz core clock (from Clock Wizard IP)
     wire clk_200mhz;         // 200 MHz high-speed clock (for LVDS ISERDES)
     wire clk_25mhz;          // 25 MHz slow clock (for gate drivers)
 
-    wire mmcm_locked;        // MMCM lock indicator
+    wire mmcm_locked;        // Clock Wizard locked indicator
     wire rst_n_sync;         // Synchronized reset (active-low)
 
     //==========================================================================
-    // Module: Differential Clock Input Buffer
+    // Module: Clock Manager (Clock Wizard IP)
     //==========================================================================
-    // Convert 50 MHz differential clock to single-ended
-    IBUFDS #(
-        .DIFF_TERM("TRUE"),       // Enable differential termination
-        .IBUF_LOW_PWR("FALSE")    // High-performance mode
-    ) ibufds_mclk (
-        .I(MCLK_50M_p),
-        .IB(MCLK_50M_n),
-        .O(clk_50mhz)
-    );
-
-    //==========================================================================
-    // Module: Clock Manager (MMCM)
-    //==========================================================================
-    // Generate multiple clock domains from 50 MHz input
-    clk_wiz_0 clk_inst0 (
-        // Input clock
-        .clk_in1(clk_50mhz),          // 50 MHz input
+    // Generate multiple clock domains from 50 MHz differential input
+    // Clock Wizard IP handles differential input internally
+    clk_ctrl u_clk_ctrl (
+        // Input clock (differential)
+        .clk_in1_p(MCLK_50M_p),       // 50 MHz differential positive
+        .clk_in1_n(MCLK_50M_n),       // 50 MHz differential negative
 
         // Output clocks
-        .clk_out1(clk_100mhz),        // 100 MHz core clock
-        .clk_out2(clk_200mhz),        // 200 MHz LVDS clock
-        .clk_out3(clk_25mhz),         // 25 MHz gate driver clock
+        .clk_100m(clk_100mhz),        // 100 MHz core clock
+        .clk_200m(clk_200mhz),        // 200 MHz LVDS clock
+        .clk_25m(clk_25mhz),          // 25 MHz gate driver clock
 
         // Status
         .locked(mmcm_locked),
 
         // Reset
-        .reset(~nRST)                 // Active-high reset to MMCM
+        .resetn(nRST)                 // Active-low reset
     );
 
     //==========================================================================
