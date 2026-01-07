@@ -1,0 +1,34 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
+| Date         : Wed Jan  7 11:01:00 2026
+| Host         : work-dev running 64-bit major release  (build 9200)
+| Command      : report_utilization -file ../vivado_project/cyan_hd_utilization_impl.rpt -hierarchical
+| Design       : cyan_hd_top
+| Device       : xc7a35tfgg484-1
+| Speed File   : -1
+| Design State : Physopt postRoute
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-----------------+------------------------+------------+------------+---------+------+-----+--------+--------+------------+
+|     Instance    |         Module         | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP Blocks |
++-----------------+------------------------+------------+------------+---------+------+-----+--------+--------+------------+
+| cyan_hd_top     |                  (top) |         18 |         18 |       0 |    0 |  46 |      0 |      0 |          0 |
+|   (cyan_hd_top) |                  (top) |          1 |          1 |       0 |    0 |  26 |      0 |      0 |          0 |
+|   u_afe2256_spi | afe2256_spi_controller |         15 |         15 |       0 |    0 |  18 |      0 |      0 |          0 |
+|   u_clk_ctrl    |               clk_ctrl |          0 |          0 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     inst        |       clk_ctrl_clk_wiz |          0 |          0 |       0 |    0 |   0 |      0 |      0 |          0 |
+|   u_reset_sync  |             reset_sync |          2 |          2 |       0 |    0 |   2 |      0 |      0 |          0 |
++-----------------+------------------------+------------+------------+---------+------+-----+--------+--------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+
