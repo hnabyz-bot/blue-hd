@@ -16,7 +16,8 @@
 
 module afe2256_model #(
     parameter NUM_CHANNELS = 14,
-    parameter PIXEL_WIDTH = 14,
+    parameter PIXEL_WIDTH = 16,          // 16-bit ADC per AFE2256 datasheet
+    parameter HEADER_WIDTH = 8,          // 8-bit header/alignment
     parameter PIXELS_PER_CHANNEL = 256
 ) (
     // Control inputs from FPGA
@@ -81,8 +82,12 @@ module afe2256_model #(
 
         // Default configuration
         test_pattern_enable = 0;
+        test_pattern_sel = 5'h00;
         test_pattern_value = 16'hAAAA;
         operation_mode = 2'b00;  // Normal mode
+        bit_count = 0;
+        pixel_count = 0;
+        frame_active = 0;
 
         // Initialize LVDS outputs (idle state)
         DCLKP = 12'h000;
@@ -229,7 +234,10 @@ module afe2256_model #(
     // Triggered by SYNC signal
     reg frame_active;
     integer pixel_count;
-    reg [13:0] current_pixel_data [0:13];  // 14 channels
+    integer bit_count;  // Bit counter for 24-bit serial output
+    reg [15:0] current_pixel_data [0:13];  // 16-bit pixel data for 14 channels
+    reg [7:0] current_header [0:13];       // 8-bit header for 14 channels
+    reg [23:0] current_serial_word [0:13]; // 24-bit word = 16-bit data + 8-bit header
 
     // Generate LVDS clocks when frame is active
     always @(posedge ROIC_MCLK0) begin
@@ -251,6 +259,7 @@ module afe2256_model #(
             // Start new frame
             frame_active <= 1;
             pixel_count <= 0;
+            bit_count <= 0;
 
             // Generate frame clock pulse
             FCLKP <= 12'hFFF;
@@ -269,49 +278,64 @@ module afe2256_model #(
         end
     end
 
-    // Generate pixel data (12-bit per AFE2256 spec)
+    // Generate pixel data (16-bit data + 8-bit header = 24 bits total per AFE2256 spec)
     always @(posedge DCLKP[0]) begin
-        if (frame_active && pixel_count < PIXELS_PER_CHANNEL) begin
-            // Generate test pattern or simulated pixel data (12-bit)
-            for (int ch = 0; ch < 14; ch++) begin
-                if (test_pattern_enable) begin
-                    // Use configured test pattern
-                    if (test_pattern_sel == 5'h13) begin
-                        // Ramp pattern: increment per pixel
-                        current_pixel_data[ch] = pixel_count[11:0] + ch;
+        if (frame_active) begin
+            // At start of new pixel, generate data
+            if (bit_count == 0) begin
+                for (int ch = 0; ch < 14; ch++) begin
+                    // Generate 16-bit pixel data
+                    if (test_pattern_enable) begin
+                        if (test_pattern_sel == 5'h13) begin
+                            // Ramp pattern: increment per pixel
+                            current_pixel_data[ch] = pixel_count[15:0] + (ch << 8);
+                        end else if (test_pattern_sel == 5'h1E) begin
+                            // Sync/deskew pattern (0xFFF0 for alignment)
+                            current_pixel_data[ch] = 16'hFFF0;
+                        end else begin
+                            // Other test patterns
+                            current_pixel_data[ch] = test_pattern_value;
+                        end
+                    end else if (ROIC_TP_SEL) begin
+                        // External test pattern request
+                        current_pixel_data[ch] = pixel_count[15:0] + ch;
                     end else begin
-                        // Fixed pattern (upper 12 bits of test_pattern_value)
-                        current_pixel_data[ch] = test_pattern_value[15:4];
+                        // Simulated sensor data: 16-bit with offset + noise
+                        current_pixel_data[ch] = 16'h8000 + ($random % 4096);
                     end
-                end else if (ROIC_TP_SEL) begin
-                    // External test pattern request
-                    current_pixel_data[ch] = pixel_count[11:0] + ch;
-                end else begin
-                    // Simulated sensor data: offset (2048) + small noise
-                    current_pixel_data[ch] = 12'h800 + ($random % 128);
+
+                    // Generate 8-bit header (simplified: channel ID + frame counter)
+                    current_header[ch] = {4'(ch), 4'(pixel_count[3:0])};
+
+                    // Combine into 24-bit serial word: [23:16]=header, [15:0]=pixel data
+                    current_serial_word[ch] = {current_header[ch], current_pixel_data[ch]};
                 end
             end
 
-            // Output differential data bit-serially on channels 0-11
-            // AFE2256 outputs 24 bits per pixel: 12-bit pixel + 12-bit alignment vector
-            // For now, simplified: output pixel data MSB first
+            // Output bit-serially (MSB first) on channels 0-11
             for (int ch = 0; ch < 12; ch++) begin
-                DOUTP[ch] <= current_pixel_data[ch][11 - (pixel_count % 12)];
-                DOUTN[ch] <= ~current_pixel_data[ch][11 - (pixel_count % 12)];
+                DOUTP[ch] <= current_serial_word[ch][23 - bit_count];
+                DOUTN[ch] <= ~current_serial_word[ch][23 - bit_count];
             end
 
-            // Output differential data on channels 12-13
+            // Output bit-serially on channels 12-13
             for (int ch = 12; ch <= 13; ch++) begin
-                DOUTP_12_13[ch] <= current_pixel_data[ch][11 - (pixel_count % 12)];
-                DOUTN_12_13[ch] <= ~current_pixel_data[ch][11 - (pixel_count % 12)];
+                DOUTP_12_13[ch] <= current_serial_word[ch][23 - bit_count];
+                DOUTN_12_13[ch] <= ~current_serial_word[ch][23 - bit_count];
             end
 
-            pixel_count <= pixel_count + 1;
+            bit_count <= bit_count + 1;
 
-            // End of frame (256 pixels per channel)
-            if (pixel_count >= PIXELS_PER_CHANNEL - 1) begin
-                frame_active <= 0;
-                $display("[AFE2256] Frame end at time %0t (pixels=%0d)", $time, pixel_count+1);
+            // After 24 bits, move to next pixel
+            if (bit_count >= 23) begin
+                bit_count <= 0;
+                pixel_count <= pixel_count + 1;
+
+                // End of frame (256 pixels per channel)
+                if (pixel_count >= PIXELS_PER_CHANNEL - 1) begin
+                    frame_active <= 0;
+                    $display("[AFE2256] Frame end at time %0t (pixels=%0d)", $time, pixel_count+1);
+                end
             end
         end
     end
