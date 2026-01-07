@@ -55,18 +55,23 @@ module tb_cyan_hd_top;
     logic [12:13] FCLKP_12_13, FCLKN_12_13;
     logic [12:13] DOUTP_12_13, DOUTN_12_13;
 
-    // MIPI CSI-2
-    wire [3:0] MIPI_D_p, MIPI_D_n;
-    wire MIPI_CLK_p, MIPI_CLK_n;
+    // MIPI CSI-2 (actual port names from cyan_hd_top)
+    logic mipi_phy_if_clk_hs_p, mipi_phy_if_clk_hs_n;
+    logic [3:0] mipi_phy_if_data_hs_p, mipi_phy_if_data_hs_n;
+    logic mipi_phy_if_clk_lp_p, mipi_phy_if_clk_lp_n;
+    logic [3:0] mipi_phy_if_data_lp_p, mipi_phy_if_data_lp_n;
 
-    // CPU Interface (SPI Slave)
-    logic CPU_SPI_SCK;
-    logic CPU_SPI_MOSI;
-    wire CPU_SPI_MISO;
-    logic CPU_SPI_CS_N;
+    // CPU Interface (SPI Slave) - actual port names
+    logic SSB;         // SPI slave select
+    logic SCLK;        // SPI clock
+    logic MOSI;        // Master out, slave in
+    wire MISO;         // Master in, slave out
 
-    // Debug
-    wire [7:0] DEBUG;
+    // Status LEDs
+    wire STATE_LED1, STATE_LED2;
+
+    // Handshake signals
+    wire exp_ack, exp_sof;
 
     //==========================================================================
     // DUT Instantiation
@@ -124,17 +129,25 @@ module tb_cyan_hd_top;
         .DOUTP_12_13(DOUTP_12_13),
         .DOUTN_12_13(DOUTN_12_13),
 
-        .MIPI_D_p(MIPI_D_p),
-        .MIPI_D_n(MIPI_D_n),
-        .MIPI_CLK_p(MIPI_CLK_p),
-        .MIPI_CLK_n(MIPI_CLK_n),
+        .mipi_phy_if_clk_hs_p(mipi_phy_if_clk_hs_p),
+        .mipi_phy_if_clk_hs_n(mipi_phy_if_clk_hs_n),
+        .mipi_phy_if_data_hs_p(mipi_phy_if_data_hs_p),
+        .mipi_phy_if_data_hs_n(mipi_phy_if_data_hs_n),
+        .mipi_phy_if_clk_lp_p(mipi_phy_if_clk_lp_p),
+        .mipi_phy_if_clk_lp_n(mipi_phy_if_clk_lp_n),
+        .mipi_phy_if_data_lp_p(mipi_phy_if_data_lp_p),
+        .mipi_phy_if_data_lp_n(mipi_phy_if_data_lp_n),
 
-        .CPU_SPI_SCK(CPU_SPI_SCK),
-        .CPU_SPI_MOSI(CPU_SPI_MOSI),
-        .CPU_SPI_MISO(CPU_SPI_MISO),
-        .CPU_SPI_CS_N(CPU_SPI_CS_N),
+        .SSB(SSB),
+        .SCLK(SCLK),
+        .MOSI(MOSI),
+        .MISO(MISO),
 
-        .DEBUG(DEBUG)
+        .STATE_LED1(STATE_LED1),
+        .STATE_LED2(STATE_LED2),
+
+        .exp_ack(exp_ack),
+        .exp_sof(exp_sof)
     );
 
     //==========================================================================
@@ -195,9 +208,19 @@ module tb_cyan_hd_top;
         // Initialize
         nRST = 0;
         ROIC_SPI_SDO = 0;
-        CPU_SPI_SCK = 0;
-        CPU_SPI_MOSI = 0;
-        CPU_SPI_CS_N = 1;
+        SSB = 1;           // SPI slave select inactive
+        SCLK = 0;
+        MOSI = 0;
+
+        // Initialize MIPI signals
+        mipi_phy_if_clk_hs_p = 0;
+        mipi_phy_if_clk_hs_n = 1;
+        mipi_phy_if_data_hs_p = 4'b0000;
+        mipi_phy_if_data_hs_n = 4'b1111;
+        mipi_phy_if_clk_lp_p = 0;
+        mipi_phy_if_clk_lp_n = 0;
+        mipi_phy_if_data_lp_p = 4'b0000;
+        mipi_phy_if_data_lp_n = 4'b0000;
 
         // Initialize LVDS frame clocks
         for (int i = 0; i < 12; i++) begin
