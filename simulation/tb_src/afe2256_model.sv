@@ -16,8 +16,8 @@
 
 module afe2256_model #(
     parameter NUM_CHANNELS = 14,
-    parameter PIXEL_WIDTH = 16,          // 16-bit ADC per AFE2256 datasheet
-    parameter HEADER_WIDTH = 8,          // 8-bit header/alignment
+    parameter PIXEL_WIDTH = 12,          // 12-bit pixel data (project uses 12-bit mode)
+    parameter ALIGN_WIDTH = 12,          // 12-bit alignment vector
     parameter PIXELS_PER_CHANNEL = 256
 ) (
     // Control inputs from FPGA
@@ -235,9 +235,9 @@ module afe2256_model #(
     reg frame_active;
     integer pixel_count;
     integer bit_count;  // Bit counter for 24-bit serial output
-    reg [15:0] current_pixel_data [0:13];  // 16-bit pixel data for 14 channels
-    reg [7:0] current_header [0:13];       // 8-bit header for 14 channels
-    reg [23:0] current_serial_word [0:13]; // 24-bit word = 16-bit data + 8-bit header
+    reg [11:0] current_pixel_data [0:13];  // 12-bit pixel data for 14 channels
+    reg [11:0] current_align [0:13];       // 12-bit alignment vector for 14 channels
+    reg [23:0] current_serial_word [0:13]; // 24-bit word = 12-bit align + 12-bit pixel
 
     // Generate LVDS clocks when frame is active
     always @(posedge ROIC_MCLK0) begin
@@ -278,37 +278,42 @@ module afe2256_model #(
         end
     end
 
-    // Generate pixel data (16-bit data + 8-bit header = 24 bits total per AFE2256 spec)
+    // Generate pixel data (12-bit pixel + 12-bit alignment = 24 bits total per project spec)
     always @(posedge DCLKP[0]) begin
         if (frame_active) begin
             // At start of new pixel, generate data
             if (bit_count == 0) begin
                 for (int ch = 0; ch < 14; ch++) begin
-                    // Generate 16-bit pixel data
+                    // Generate 12-bit pixel data
                     if (test_pattern_enable) begin
                         if (test_pattern_sel == 5'h13) begin
                             // Ramp pattern: increment per pixel
-                            current_pixel_data[ch] = pixel_count[15:0] + (ch << 8);
+                            current_pixel_data[ch] = pixel_count[11:0] + ch[3:0];
                         end else if (test_pattern_sel == 5'h1E) begin
-                            // Sync/deskew pattern (0xFFF0 for alignment)
-                            current_pixel_data[ch] = 16'hFFF0;
+                            // Sync/deskew pattern (0xFFF per afe2256_lvds_pkg.sv)
+                            current_pixel_data[ch] = 12'hFFF;
+                            current_align[ch] = 12'h000;  // SYNC_PATTERN_HIGH/LOW
+                        end else if (test_pattern_sel == 5'h11) begin
+                            // Row/Column pattern (0xAAA per pkg)
+                            current_pixel_data[ch] = 12'hAAA;
+                            current_align[ch] = 12'h555;
                         end else begin
                             // Other test patterns
-                            current_pixel_data[ch] = test_pattern_value;
+                            current_pixel_data[ch] = test_pattern_value[11:0];
+                            current_align[ch] = 12'h000;
                         end
                     end else if (ROIC_TP_SEL) begin
                         // External test pattern request
-                        current_pixel_data[ch] = pixel_count[15:0] + ch;
+                        current_pixel_data[ch] = pixel_count[11:0] + ch[3:0];
+                        current_align[ch] = 12'h000;
                     end else begin
-                        // Simulated sensor data: 16-bit with offset + noise
-                        current_pixel_data[ch] = 16'h8000 + ($random % 4096);
+                        // Simulated sensor data: 12-bit with offset + noise
+                        current_pixel_data[ch] = 12'h800 + ($random % 256);
+                        current_align[ch] = 12'h000;  // Normal alignment
                     end
 
-                    // Generate 8-bit header (simplified: channel ID + frame counter)
-                    current_header[ch] = {4'(ch), 4'(pixel_count[3:0])};
-
-                    // Combine into 24-bit serial word: [23:16]=header, [15:0]=pixel data
-                    current_serial_word[ch] = {current_header[ch], current_pixel_data[ch]};
+                    // Combine into 24-bit serial word: [23:12]=alignment, [11:0]=pixel data
+                    current_serial_word[ch] = {current_align[ch], current_pixel_data[ch]};
                 end
             end
 
