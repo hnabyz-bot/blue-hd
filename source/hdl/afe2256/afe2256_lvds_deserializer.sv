@@ -124,64 +124,85 @@ module afe2256_lvds_deserializer
     assign clkdiv_out = clkdiv;
 
     //==========================================================================
-    // ISERDES2 for DOUT (Data Deserialization)
+    // ISERDESE2 for DOUT (Data Deserialization)
     //==========================================================================
 
-    ISERDES2 #(
+    ISERDESE2 #(
         .DATA_RATE      ("DDR"),        // DDR mode
         .DATA_WIDTH     (4),            // 1:4 deserialization
-        .BITSLIP_ENABLE ("TRUE"),       // Enable bit alignment
+        .INTERFACE_TYPE ("NETWORKING"), // Networking mode for BUFR
+        .NUM_CE         (1),            // Number of clock enables
         .SERDES_MODE    ("MASTER"),     // Master mode
-        .INTERFACE_TYPE ("RETIMED")     // Retimed interface
+        .IOBDELAY       ("NONE")        // No input delay
     ) iserdes_dout (
         .D          (dout_buf),         // Serial data input
-        .CLK0       (ioclk),            // IO clock
-        .CLK1       (~ioclk),           // Inverted IO clock
+        .DDLY       (1'b0),             // Delayed data input (unused)
+        .CLK        (ioclk),            // IO clock
+        .CLKB       (~ioclk),           // Inverted IO clock
         .CLKDIV     (clkdiv),           // Divided clock from BUFR
-        .IOCE       (1'b1),             // IO clock enable
+        .OCLK       (1'b0),             // Output clock (unused)
+        .OCLKB      (1'b0),             // Inverted output clock (unused)
+        .CE1        (1'b1),             // Clock enable
+        .CE2        (1'b1),             // Clock enable
         .RST        (~rst_n),           // Active HIGH reset
         .BITSLIP    (bitslip),          // Bit alignment control
-        .CE0        (1'b1),             // Clock enable
-        .Q4         (iserdes_data[3]),  // MSB
-        .Q3         (iserdes_data[2]),
-        .Q2         (iserdes_data[1]),
+        .DYNCLKDIVSEL (1'b0),           // Dynamic CLKDIV select (unused)
+        .DYNCLKSEL  (1'b0),             // Dynamic CLK select (unused)
+        .OFB        (1'b0),             // Output feedback (unused)
+        .SHIFTIN1   (1'b0),             // Cascade input 1 (unused)
+        .SHIFTIN2   (1'b0),             // Cascade input 2 (unused)
         .Q1         (iserdes_data[0]),  // LSB
-        // Unused cascade ports
-        .FABRICOUT  (),
-        .INCDEC     (),
-        .VALID      (),
-        .SHIFTIN    (1'b0),
-        .SHIFTOUT   ()
+        .Q2         (iserdes_data[1]),
+        .Q3         (iserdes_data[2]),
+        .Q4         (iserdes_data[3]),  // MSB
+        .Q5         (),                 // Unused
+        .Q6         (),                 // Unused
+        .Q7         (),                 // Unused
+        .Q8         (),                 // Unused
+        .O          (),                 // Direct output (unused)
+        .SHIFTOUT1  (),                 // Cascade output 1 (unused)
+        .SHIFTOUT2  ()                  // Cascade output 2 (unused)
     );
 
     //==========================================================================
-    // ISERDES2 for FCLK (Frame Clock Deserialization)
+    // ISERDESE2 for FCLK (Frame Clock Deserialization)
     //==========================================================================
 
-    ISERDES2 #(
+    ISERDESE2 #(
         .DATA_RATE      ("DDR"),
         .DATA_WIDTH     (4),
-        .BITSLIP_ENABLE ("FALSE"),      // No bitslip for FCLK
+        .INTERFACE_TYPE ("NETWORKING"), // Networking mode for BUFR
+        .NUM_CE         (1),
         .SERDES_MODE    ("MASTER"),
-        .INTERFACE_TYPE ("RETIMED")
+        .IOBDELAY       ("NONE")
     ) iserdes_fclk (
         .D          (fclk_buf),
-        .CLK0       (ioclk),
-        .CLK1       (~ioclk),
+        .DDLY       (1'b0),
+        .CLK        (ioclk),
+        .CLKB       (~ioclk),
         .CLKDIV     (clkdiv),           // Divided clock from BUFR
-        .IOCE       (1'b1),
+        .OCLK       (1'b0),
+        .OCLKB      (1'b0),
+        .CE1        (1'b1),
+        .CE2        (1'b1),
         .RST        (~rst_n),
-        .BITSLIP    (1'b0),
-        .CE0        (1'b1),
-        .Q4         (iserdes_fclk[3]),
-        .Q3         (iserdes_fclk[2]),
-        .Q2         (iserdes_fclk[1]),
+        .BITSLIP    (1'b0),             // No bitslip for FCLK
+        .DYNCLKDIVSEL (1'b0),
+        .DYNCLKSEL  (1'b0),
+        .OFB        (1'b0),
+        .SHIFTIN1   (1'b0),
+        .SHIFTIN2   (1'b0),
         .Q1         (iserdes_fclk[0]),
-        .FABRICOUT  (),
-        .INCDEC     (),
-        .VALID      (),
-        .SHIFTIN    (1'b0),
-        .SHIFTOUT   ()
+        .Q2         (iserdes_fclk[1]),
+        .Q3         (iserdes_fclk[2]),
+        .Q4         (iserdes_fclk[3]),
+        .Q5         (),
+        .Q6         (),
+        .Q7         (),
+        .Q8         (),
+        .O          (),
+        .SHIFTOUT1  (),
+        .SHIFTOUT2  ()
     );
 
     //==========================================================================

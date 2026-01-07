@@ -61,10 +61,24 @@ module cyan_hd_top (
     //==========================================================================
     output wire        GF_STV_L,           // Start vertical (Left)
     output wire        GF_STV_R,           // Start vertical (Right)
-    output wire [1:8]  GF_STV_LR,          // Start vertical intermediate (LR1-LR8)
+    output wire        GF_STV_LR1,         // Start vertical intermediate LR1
+    output wire        GF_STV_LR2,         // Start vertical intermediate LR2
+    output wire        GF_STV_LR3,         // Start vertical intermediate LR3
+    output wire        GF_STV_LR4,         // Start vertical intermediate LR4
+    output wire        GF_STV_LR5,         // Start vertical intermediate LR5
+    output wire        GF_STV_LR6,         // Start vertical intermediate LR6
+    output wire        GF_STV_LR7,         // Start vertical intermediate LR7
+    output wire        GF_STV_LR8,         // Start vertical intermediate LR8
     output wire        GF_CPV,             // Clock pulse vertical
     output wire        GF_OE,              // Output enable
-    output wire [1:8]  GF_XAO,             // Analog output control (XAO_1 to XAO_8)
+    output wire        GF_XAO_1,           // Analog output control XAO_1
+    output wire        GF_XAO_2,           // Analog output control XAO_2
+    output wire        GF_XAO_3,           // Analog output control XAO_3
+    output wire        GF_XAO_4,           // Analog output control XAO_4
+    output wire        GF_XAO_5,           // Analog output control XAO_5
+    output wire        GF_XAO_6,           // Analog output control XAO_6
+    output wire        GF_XAO_7,           // Analog output control XAO_7
+    output wire        GF_XAO_8,           // Analog output control XAO_8
 
     //==========================================================================
     // LVDS ADC Interface - 14 Channels (Ch0-Ch13)
@@ -144,9 +158,9 @@ module cyan_hd_top (
         .clk_in1_n(MCLK_50M_n),       // 50 MHz differential negative
 
         // Output clocks
-        .clk_100m(clk_100mhz),        // 100 MHz core clock
-        .clk_200m(clk_200mhz),        // 200 MHz LVDS clock
-        .clk_25m(clk_25mhz),          // 25 MHz gate driver clock
+        .clk_out1(clk_100mhz),        // 100 MHz core clock
+        .clk_out2(clk_200mhz),        // 200 MHz LVDS clock
+        .clk_out3(clk_25mhz),         // 25 MHz gate driver clock
 
         // Status
         .locked(mmcm_locked),
@@ -401,12 +415,26 @@ module cyan_hd_top (
     // Gate driver outputs
     assign GF_STV_L = gf_stv_pulse;
     assign GF_STV_R = gf_stv_pulse;
-    assign GF_STV_LR = {8{gf_stv_pulse}};  // Broadcast to all LR signals
+    assign GF_STV_LR1 = gf_stv_pulse;  // Broadcast to all LR signals
+    assign GF_STV_LR2 = gf_stv_pulse;
+    assign GF_STV_LR3 = gf_stv_pulse;
+    assign GF_STV_LR4 = gf_stv_pulse;
+    assign GF_STV_LR5 = gf_stv_pulse;
+    assign GF_STV_LR6 = gf_stv_pulse;
+    assign GF_STV_LR7 = gf_stv_pulse;
+    assign GF_STV_LR8 = gf_stv_pulse;
     assign GF_CPV = gf_cpv_pulse;
     assign GF_OE = gf_oe_enable;
 
     // Analog output control (static for now, configure via SPI)
-    assign GF_XAO = ctrl_reg0[15:8];
+    assign GF_XAO_1 = ctrl_reg0[8];
+    assign GF_XAO_2 = ctrl_reg0[9];
+    assign GF_XAO_3 = ctrl_reg0[10];
+    assign GF_XAO_4 = ctrl_reg0[11];
+    assign GF_XAO_5 = ctrl_reg0[12];
+    assign GF_XAO_6 = ctrl_reg0[13];
+    assign GF_XAO_7 = ctrl_reg0[14];
+    assign GF_XAO_8 = ctrl_reg0[15];
 
     // ROIC control
     assign ROIC_TP_SEL = ctrl_reg0[16];    // Test pattern select
@@ -450,28 +478,6 @@ module cyan_hd_top (
     // SPI TX data (example: send first ADC channel data)
     assign spi_tx_data = {20'h0, adc_data[0]};
 
-endmodule
-
-
-//==============================================================================
-// Helper Module: Reset Synchronizer
-//==============================================================================
-module reset_sync (
-    input  wire clk,
-    input  wire async_rst_n,
-    output reg  sync_rst_n
-);
-    reg rst_sync_ff1;
-
-    always_ff @(posedge clk or negedge async_rst_n) begin
-        if (!async_rst_n) begin
-            rst_sync_ff1 <= 1'b0;
-            sync_rst_n   <= 1'b0;
-        end else begin
-            rst_sync_ff1 <= 1'b1;
-            sync_rst_n   <= rst_sync_ff1;
-        end
-    end
 endmodule
 
 
