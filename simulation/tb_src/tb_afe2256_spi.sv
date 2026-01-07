@@ -225,8 +225,9 @@ module tb_afe2256_spi;
         $display("\n[TEST %0d] Multiple Consecutive Writes", test_count);
 
         for (int i = 0; i < 5; i++) begin
-            logic [7:0] addr_test = 8'h10 + i;
-            logic [15:0] data_test = 16'h1000 + i;
+            automatic logic [7:0] addr_test = 8'h10 + i;
+            automatic logic [15:0] data_test = 16'h1000 + i;
+            automatic logic [23:0] expected;
 
             $display("  Write %0d: Addr=0x%02X, Data=0x%04X", i+1, addr_test, data_test);
 
@@ -241,7 +242,7 @@ module tb_afe2256_spi;
             wait(done);
             @(posedge clk);
 
-            logic [23:0] expected = {addr_test, data_test};
+            expected = {addr_test, data_test};
             if (captured_data == expected) begin
                 $display("    ✓ PASS: Captured = 0x%06X", captured_data);
             end else begin
@@ -258,8 +259,9 @@ module tb_afe2256_spi;
         test_count = test_count + 1;
         $display("\n[TEST %0d] SPI Timing Verification", test_count);
 
-        real sck_period_measured;
-        time sck_rise_time1, sck_rise_time2;
+        begin
+            automatic real sck_period_measured;
+            automatic time sck_rise_time1, sck_rise_time2;
 
         @(posedge clk);
         reg_addr = 8'h5C;
@@ -289,6 +291,7 @@ module tb_afe2256_spi;
         @(posedge clk);
 
         #(CLK_PERIOD*20);
+        end  // Test 5 block
 
         //======================================================================
         // Test 6: Full Initialization Sequence
@@ -299,6 +302,7 @@ module tb_afe2256_spi;
 
         for (int i = 0; i < INIT_REG_COUNT; i++) begin
             automatic init_reg_t init_reg = INIT_SEQUENCE[i];
+            automatic logic [23:0] expected;
 
             $display("  Init[%2d]: Addr=0x%02X, Data=0x%04X, Delay=%0d us",
                      i, init_reg.addr, init_reg.data, init_reg.delay_us);
@@ -314,7 +318,7 @@ module tb_afe2256_spi;
             wait(done);
             @(posedge clk);
 
-            logic [23:0] expected = {init_reg.addr, init_reg.data};
+            expected = {init_reg.addr, init_reg.data};
             if (captured_data == expected) begin
                 $display("    ✓ Verified: 0x%06X", captured_data);
             end else begin
