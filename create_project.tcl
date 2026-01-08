@@ -23,7 +23,7 @@ set_property default_lib work $proj
 
 # Add HDL source files
 if {[file exists "./source/hdl"]} {
-    set hdl_files [glob -nocomplain ./source/hdl/*.v ./source/hdl/*.sv ./source/hdl/*.vhd]
+    set hdl_files [glob -nocomplain ./source/hdl/*.v ./source/hdl/*.sv ./source/hdl/*.vhd ./source/hdl/afe2256/*.sv]
     if {[llength $hdl_files] > 0} {
         add_files -fileset sources_1 $hdl_files
         puts "Added [llength $hdl_files] HDL source files"

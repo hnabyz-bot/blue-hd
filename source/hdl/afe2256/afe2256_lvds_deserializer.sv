@@ -175,7 +175,7 @@ module afe2256_lvds_deserializer
         .NUM_CE         (1),
         .SERDES_MODE    ("MASTER"),
         .IOBDELAY       ("NONE")
-    ) iserdes_fclk (
+    ) iserdes_fclk_inst (
         .D          (fclk_buf),
         .DDLY       (1'b0),
         .CLK        (ioclk),

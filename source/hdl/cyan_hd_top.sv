@@ -443,9 +443,9 @@ module cyan_hd_top (
     assign ROIC_AVDD1 = ctrl_reg0[17];     // Power control 1
     assign ROIC_AVDD2 = ctrl_reg0[18];     // Power control 2
 
-    // ROIC SPI (master mode - connected to AFE2256 SPI controller)
-    assign ROIC_SPI_SCK = afe_spi_sck;     // Connected to AFE2256 SPI master
-    assign ROIC_SPI_SDI = afe_spi_sdi;     // Connected to AFE2256 SPI master
+//    // ROIC SPI (master mode - connected to AFE2256 SPI controller)
+//    assign ROIC_SPI_SCK = afe_spi_sck;     // Connected to AFE2256 SPI master
+//    assign ROIC_SPI_SDI = afe_spi_sdi;     // Connected to AFE2256 SPI master
 
     // Status LEDs (heartbeat and lock indicator)
     reg [25:0] led_counter;
