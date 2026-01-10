@@ -491,36 +491,10 @@ endmodule
 
 
 //==============================================================================
-// Placeholder Modules (TODO: Implement these)
+// Placeholder Modules
 //==============================================================================
-
-// LVDS ADC Interface Module (needs ISERDES implementation)
-module lvds_adc_interface #(
-    parameter DATA_WIDTH = 12,
-    parameter CHANNEL_ID = 0
-)(
-    input  wire                  clk_200mhz,
-    input  wire                  clk_100mhz,
-    input  wire                  rst_n,
-    input  wire                  dclk_p,
-    input  wire                  dclk_n,
-    input  wire                  fclk_p,
-    input  wire                  fclk_n,
-    input  wire                  dout_p,
-    input  wire                  dout_n,
-    output wire [DATA_WIDTH-1:0] adc_data,
-    output wire                  adc_data_valid,
-    output wire                  adc_dclk_int,
-    output wire                  adc_fclk_int
-);
-    // TODO: Implement ISERDES-based LVDS receiver
-    // See Section 26.2 of claude-agent-fpga.md for LVDS SERDES implementation
-
-    assign adc_data = 12'h0;
-    assign adc_data_valid = 1'b0;
-    assign adc_dclk_int = 1'b0;
-    assign adc_fclk_int = 1'b0;
-endmodule
+// Note: LVDS ADC interface is implemented in afe2256_lvds_receiver.sv
+// These modules provide basic functionality for system integration
 
 // SPI Slave Controller
 module spi_slave_controller (

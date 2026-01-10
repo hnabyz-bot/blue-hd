@@ -135,43 +135,53 @@ module afe2256_model #(
 
     reg [15:0] spi_read_data;
     reg spi_is_read;
+    reg [6:0] spi_addr;
 
+    // SPI slave - shift in on SCK rising edge, shift out on falling edge
     always @(posedge ROIC_SPI_SCK or posedge ROIC_SPI_SEN_N) begin
         if (ROIC_SPI_SEN_N) begin
             // CS deasserted - reset
             spi_bit_count <= 0;
-            ROIC_SPI_SDO <= 1'bz;
             spi_is_read <= 0;
         end else begin
             // Shift in command data on SCK rising edge
             spi_shift_reg <= {spi_shift_reg[22:0], ROIC_SPI_SDI};
             spi_bit_count <= spi_bit_count + 1;
 
-            // After 8 bits (R/W + address), determine if read operation
+            // After 8 bits (R/W + 7-bit address), determine operation type
             if (spi_bit_count == 7) begin
-                spi_is_read <= spi_shift_reg[6];  // bit 23 -> shifted to bit 6 after 8 clocks
+                spi_is_read <= spi_shift_reg[6];  // MSB (R/W bit)
+                spi_addr <= {spi_shift_reg[5:0], ROIC_SPI_SDI};  // 7-bit address
+
                 if (spi_shift_reg[6]) begin
-                    // Read operation - prepare data
-                    reg [6:0] read_addr;
-                    read_addr = spi_shift_reg[5:0] << 1 | ROIC_SPI_SDI;  // Capture last bit
-                    spi_read_data <= {config_regs[{1'b0, read_addr}], config_regs[{1'b0, read_addr} + 1]};
-                    $display("[AFE2256] SPI Read: Addr=0x%02X", read_addr);
+                    // Read operation - prepare data from config registers
+                    spi_read_data <= {config_regs[{1'b0, spi_shift_reg[5:0], ROIC_SPI_SDI}],
+                                      config_regs[{1'b0, spi_shift_reg[5:0], ROIC_SPI_SDI} + 1]};
+                    $display("[AFE2256 SPI] Read Addr=0x%02X at time %0t", {spi_shift_reg[5:0], ROIC_SPI_SDI}, $time);
                 end
             end
 
-            // For read operations, shift out data on bits 8-23
-            if (spi_is_read && spi_bit_count >= 8) begin
+            // After 24 bits, process write command
+            if (spi_bit_count == 23) begin
+                if (!spi_is_read) begin
+                    process_spi_command({spi_shift_reg[22:0], ROIC_SPI_SDI});
+                end else begin
+                    $display("[AFE2256 SPI] Read complete: Data=0x%04X", spi_read_data);
+                end
+            end
+        end
+    end
+
+    // SPI SDO - shift out on falling edge for read operations
+    always @(negedge ROIC_SPI_SCK or posedge ROIC_SPI_SEN_N) begin
+        if (ROIC_SPI_SEN_N) begin
+            ROIC_SPI_SDO <= 1'bz;
+        end else begin
+            if (spi_is_read && spi_bit_count >= 8 && spi_bit_count < 24) begin
+                // Shift out read data MSB first (bits 8-23)
                 ROIC_SPI_SDO <= spi_read_data[23 - spi_bit_count];
             end else begin
                 ROIC_SPI_SDO <= 1'bz;
-            end
-
-            // After 24 bits, process write command if write operation
-            if (spi_bit_count == 23) begin
-                if (!spi_is_read) begin
-                    process_spi_command(spi_shift_reg);
-                end
-                spi_bit_count <= 0;
             end
         end
     end
@@ -277,25 +287,31 @@ module afe2256_model #(
     // LVDS Data Output Generation
     //==========================================================================
 
-    // Generate LVDS clocks when frame is active
-    // LVDS clock should be faster than MCLK0 for DDR data
-    integer mclk_edge_count = 0;
-    always @(posedge ROIC_MCLK0) begin
-        if (!ROIC_AVDD1 || !ROIC_AVDD2) begin
+    // LVDS clock generation - DDR mode requires precise timing
+    // AFE2256 datasheet: DCLK frequency = (MCLK0 / scan_time) * pixels_per_channel
+    // For simulation: Use ~50MHz DCLK (20ns period, 10ns half-period)
+
+    reg lvds_dclk_gen;  // Separate DCLK generator
+    integer dclk_count;
+
+    initial begin
+        lvds_dclk_gen = 0;
+        dclk_count = 0;
+    end
+
+    // Free-running DCLK generator when frame is active and powered
+    always @(posedge ROIC_MCLK0 or negedge frame_active) begin
+        if (!frame_active || !ROIC_AVDD1 || !ROIC_AVDD2) begin
             lvds_clk <= 1'b0;
-            mclk_edge_count = 0;
-        end else if (frame_active) begin
-            // Generate faster clock for LVDS (e.g., 2x MCLK0 = 50MHz)
-            lvds_clk <= ~lvds_clk;
-            if (mclk_edge_count < 3) begin
-                $display("[AFE2256] MCLK0 edge %0d, lvds_clk=%b, frame_active=%b",
-                         mclk_edge_count, ~lvds_clk, frame_active);
-            end
-            mclk_edge_count = mclk_edge_count + 1;
+            dclk_count <= 0;
         end else begin
-            lvds_clk <= 1'b0;
-            if (mclk_edge_count > 0 && mclk_edge_count < 3) begin
-                $display("[AFE2256] MCLK0 running but frame_active=0");
+            // Toggle LVDS clock on every MCLK0 edge (creates 2x MCLK0 frequency)
+            lvds_clk <= ~lvds_clk;
+            dclk_count <= dclk_count + 1;
+
+            if (dclk_count < 5) begin
+                $display("[AFE2256 DCLK] Edge %0d at time %0t, lvds_clk=%b",
+                         dclk_count, $time, ~lvds_clk);
             end
         end
     end
@@ -315,28 +331,43 @@ module afe2256_model #(
         end
     end
 
-    // Frame control via SYNC
+    // Frame control via SYNC with timing verification
+    time frame_start_time;
+    time frame_end_time;
+    time fclk_pulse_start;
+
     always @(posedge ROIC_SYNC) begin
         if (ROIC_AVDD1 && ROIC_AVDD2 && operation_mode != 2'b10) begin
+            if (frame_active) begin
+                $display("[AFE2256 WARNING] SYNC received while frame active at time %0t", $time);
+            end
+
             // Start new frame
             frame_active <= 1;
             pixel_count <= 0;
             bit_count <= 0;
+            frame_start_time = $time;
 
-            // Generate frame clock pulse
+            // Generate frame clock pulse (FCLK)
+            fclk_pulse_start = $time;
             FCLKP <= 12'hFFF;
             FCLKN <= 12'h000;
             FCLKP_12_13 <= 2'b11;
             FCLKN_12_13 <= 2'b00;
 
-            #10;  // Frame clock pulse width
+            #10;  // FCLK pulse width: 10ns (per datasheet)
 
             FCLKP <= 12'h000;
             FCLKN <= 12'hFFF;
             FCLKP_12_13 <= 2'b00;
             FCLKN_12_13 <= 2'b11;
 
-            $display("[AFE2256] Frame start at time %0t", $time);
+            $display("[AFE2256 FRAME] Start at time %0t, FCLK pulse width=%0dns",
+                     frame_start_time, $time - fclk_pulse_start);
+        end else if (!ROIC_AVDD1 || !ROIC_AVDD2) begin
+            $display("[AFE2256 ERROR] SYNC ignored - power off at time %0t", $time);
+        end else if (operation_mode == 2'b10) begin
+            $display("[AFE2256 ERROR] SYNC ignored - sleep mode at time %0t", $time);
         end
     end
 
@@ -412,32 +443,119 @@ module afe2256_model #(
                 // End of frame (256 pixels per channel)
                 if (pixel_count >= PIXELS_PER_CHANNEL - 1) begin
                     frame_active <= 0;
-                    $display("[AFE2256] Frame end at time %0t (pixels=%0d)", $time, pixel_count+1);
+                    frame_end_time = $time;
+
+                    $display("[AFE2256 FRAME] End at time %0t", frame_end_time);
+                    $display("[AFE2256 FRAME] Duration: %0dns (%0d pixels)",
+                             frame_end_time - frame_start_time, pixel_count + 1);
+                    $display("[AFE2256 FRAME] Total DCLK edges: %0d (expected: %0d)",
+                             dclk_count, PIXELS_PER_CHANNEL * 24);
+
+                    // Verify frame timing
+                    if (pixel_count + 1 != PIXELS_PER_CHANNEL) begin
+                        $display("[AFE2256 ERROR] Pixel count mismatch: %0d (expected %0d)",
+                                 pixel_count + 1, PIXELS_PER_CHANNEL);
+                    end
                 end
             end
         end
     end
 
     //==========================================================================
-    // Debug monitors
+    // Debug monitors and Power Sequencing
     //==========================================================================
-    // Monitor power state
+
+    // Power sequencing timing verification
+    time avdd1_on_time, avdd2_on_time;
+    time avdd1_off_time, avdd2_off_time;
+    reg power_valid;
+
+    initial begin
+        power_valid = 0;
+        avdd1_on_time = 0;
+        avdd2_on_time = 0;
+    end
+
+    // Monitor AVDD1 transitions
+    always @(ROIC_AVDD1) begin
+        if (ROIC_AVDD1) begin
+            avdd1_on_time = $time;
+            $display("[AFE2256 POWER] AVDD1 ON at time %0t", $time);
+        end else begin
+            avdd1_off_time = $time;
+            $display("[AFE2256 POWER] AVDD1 OFF at time %0t", $time);
+            if (avdd1_on_time > 0) begin
+                $display("[AFE2256 POWER] AVDD1 was ON for %0dns", avdd1_off_time - avdd1_on_time);
+            end
+        end
+    end
+
+    // Monitor AVDD2 transitions
+    always @(ROIC_AVDD2) begin
+        if (ROIC_AVDD2) begin
+            avdd2_on_time = $time;
+            $display("[AFE2256 POWER] AVDD2 ON at time %0t", $time);
+        end else begin
+            avdd2_off_time = $time;
+            $display("[AFE2256 POWER] AVDD2 OFF at time %0t", $time);
+            if (avdd2_on_time > 0) begin
+                $display("[AFE2256 POWER] AVDD2 was ON for %0dns", avdd2_off_time - avdd2_on_time);
+            end
+        end
+    end
+
+    // Combined power state monitoring
     always @(ROIC_AVDD1, ROIC_AVDD2) begin
         if (ROIC_AVDD1 && ROIC_AVDD2) begin
-            $display("[AFE2256] Power ON at time %0t", $time);
+            if (!power_valid) begin
+                power_valid = 1;
+                $display("[AFE2256 POWER] Both rails ON - ROIC operational at time %0t", $time);
+
+                // Check power-up sequence timing (datasheet: AVDD1 and AVDD2 can be simultaneous)
+                if (avdd1_on_time > 0 && avdd2_on_time > 0) begin
+                    if (avdd1_on_time != avdd2_on_time) begin
+                        $display("[AFE2256 POWER] Warning: AVDD1/AVDD2 not simultaneous (delta=%0dns)",
+                                 avdd1_on_time > avdd2_on_time ? avdd1_on_time - avdd2_on_time : avdd2_on_time - avdd1_on_time);
+                    end
+                end
+            end
         end else begin
-            $display("[AFE2256] Power OFF at time %0t", $time);
+            if (power_valid) begin
+                power_valid = 0;
+                $display("[AFE2256 POWER] Power rails OFF - ROIC inactive at time %0t", $time);
+
+                // Abort active frame if any
+                if (frame_active) begin
+                    $display("[AFE2256 ERROR] Frame aborted due to power loss at pixel %0d", pixel_count);
+                    frame_active = 0;
+                end
+            end
         end
     end
 
     // Monitor mode changes
     always @(operation_mode) begin
         case (operation_mode)
-            2'b00: $display("[AFE2256] Mode: NORMAL");
-            2'b01: $display("[AFE2256] Mode: TEST PATTERN");
-            2'b10: $display("[AFE2256] Mode: SLEEP");
-            default: $display("[AFE2256] Mode: UNKNOWN");
+            2'b00: $display("[AFE2256 MODE] NORMAL at time %0t", $time);
+            2'b01: $display("[AFE2256 MODE] TEST PATTERN at time %0t", $time);
+            2'b10: $display("[AFE2256 MODE] SLEEP at time %0t", $time);
+            default: $display("[AFE2256 MODE] UNKNOWN at time %0t", $time);
         endcase
+    end
+
+    // Monitor test pattern changes
+    always @(test_pattern_enable, test_pattern_sel) begin
+        if (test_pattern_enable) begin
+            case (test_pattern_sel)
+                5'h00: $display("[AFE2256 TEST] Pattern: NORMAL (sensor data)");
+                5'h11: $display("[AFE2256 TEST] Pattern: ROW/COLUMN (0xAAAA/0x55)");
+                5'h13: $display("[AFE2256 TEST] Pattern: RAMP (incremental)");
+                5'h17: $display("[AFE2256 TEST] Pattern: ALL ZEROS");
+                5'h19: $display("[AFE2256 TEST] Pattern: ALL ONES");
+                5'h1E: $display("[AFE2256 TEST] Pattern: SYNC/DESKEW (0xFFF0/0xAA)");
+                default: $display("[AFE2256 TEST] Pattern: 0x%02X (unknown)", test_pattern_sel);
+            endcase
+        end
     end
 
 endmodule

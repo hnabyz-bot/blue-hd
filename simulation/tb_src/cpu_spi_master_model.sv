@@ -248,4 +248,154 @@ module cpu_spi_master_model #(
         end
     endtask
 
+    //==========================================================================
+    // Task: Disable AFE2256 power
+    //==========================================================================
+    task disable_afe2256_power();
+        begin
+            $display("[CPU_SPI] Disabling AFE2256 power");
+            write_ctrl_reg0(32'h0000_0000);
+        end
+    endtask
+
+    //==========================================================================
+    // Task: Execute AFE2256 full initialization sequence
+    // Based on afe2256_spi_pkg::INIT_SEQUENCE
+    //==========================================================================
+    task init_afe2256_full_sequence();
+        begin
+            $display("[CPU_SPI] ========================================");
+            $display("[CPU_SPI] AFE2256 Full Initialization Sequence");
+            $display("[CPU_SPI] ========================================");
+
+            // 1. Soft Reset
+            $display("[CPU_SPI] Step 1: Soft Reset");
+            write_afe2256_reg(8'h00, 16'h0001);  // RESET
+            #10us;
+
+            // 2. TRIM_LOAD (Critical)
+            $display("[CPU_SPI] Step 2: TRIM_LOAD (Critical)");
+            write_afe2256_reg(8'h30, 16'h0002);  // TRIM_LOAD
+            #5us;
+
+            // 3. Essential Bits (Integrate-up mode)
+            $display("[CPU_SPI] Step 3: Essential Bits Configuration");
+            write_afe2256_reg(8'h11, 16'h2830);  // STR + AUTO_REVERSE
+            write_afe2256_reg(8'h12, 16'h4000);  // ESSENTIAL_BIT2
+            write_afe2256_reg(8'h16, 16'h00C0);  // ESSENTIAL_BITS5
+            write_afe2256_reg(8'h18, 16'h0001);  // ESSENTIAL_BIT3
+            write_afe2256_reg(8'h2C, 16'h0000);  // ESSENTIAL_BIT8
+            write_afe2256_reg(8'h61, 16'h4000);  // ESSENTIAL_BIT4
+
+            // 4. Operating Mode
+            $display("[CPU_SPI] Step 4: Operating Mode Configuration");
+            write_afe2256_reg(8'h5E, 16'h0000);  // INTG_MODE (integrate-up)
+            write_afe2256_reg(8'h5C, 16'h4800);  // INPUT_RANGE (4.8pC)
+            write_afe2256_reg(8'h5D, 16'h0002);  // POWER_MODE (low-noise)
+
+            // 5. Power Mode
+            $display("[CPU_SPI] Step 5: Quick Wakeup Mode");
+            write_afe2256_reg(8'h13, 16'h0020);  // Quick wakeup
+
+            // 6. Test Pattern (Sync/Deskew for alignment)
+            $display("[CPU_SPI] Step 6: Test Pattern (Sync/Deskew)");
+            write_afe2256_reg(8'h10, 16'h03C0);  // Sync pattern
+            #1us;
+
+            $display("[CPU_SPI] ========================================");
+            $display("[CPU_SPI] Initialization Complete");
+            $display("[CPU_SPI] ========================================");
+        end
+    endtask
+
+    //==========================================================================
+    // Task: Test all AFE2256 configuration registers
+    //==========================================================================
+    task test_all_afe2256_registers(output integer pass_count, output integer fail_count);
+        reg [7:0] test_addrs [0:15];
+        reg [15:0] test_data;
+        reg [15:0] readback;
+        integer i;
+        begin
+            pass_count = 0;
+            fail_count = 0;
+
+            $display("[CPU_SPI] ========================================");
+            $display("[CPU_SPI] Testing All AFE2256 Registers");
+            $display("[CPU_SPI] ========================================");
+
+            // Define all testable register addresses
+            test_addrs[0]  = 8'h00;  // RESET
+            test_addrs[1]  = 8'h10;  // TEST_PATTERN
+            test_addrs[2]  = 8'h11;  // STR
+            test_addrs[3]  = 8'h12;  // ESSENTIAL_BIT2
+            test_addrs[4]  = 8'h13;  // POWER_DOWN
+            test_addrs[5]  = 8'h16;  // ESSENTIAL_BITS
+            test_addrs[6]  = 8'h18;  // ESSENTIAL_BIT3
+            test_addrs[7]  = 8'h2C;  // ESSENTIAL_BIT8
+            test_addrs[8]  = 8'h30;  // TRIM_LOAD
+            test_addrs[9]  = 8'h5C;  // INPUT_RANGE
+            test_addrs[10] = 8'h5D;  // POWER_MODE
+            test_addrs[11] = 8'h5E;  // INTG_MODE
+            test_addrs[12] = 8'h61;  // ESSENTIAL_BIT4
+            test_addrs[13] = 8'h5A;  // PROBE_SIGNAL
+            test_addrs[14] = 8'h40;  // IRST (timing profile)
+            test_addrs[15] = 8'h42;  // SHR (timing profile)
+
+            for (i = 0; i < 16; i = i + 1) begin
+                // Generate unique test value
+                test_data = 16'hA5A5 ^ (i << 8) ^ (i << 4);
+
+                $display("\n[CPU_SPI] Testing Register 0x%02X", test_addrs[i]);
+                $display("[CPU_SPI]   Writing: 0x%04X", test_data);
+
+                // Write register
+                write_afe2256_reg(test_addrs[i], test_data);
+
+                // Read back
+                read_afe2256_reg(test_addrs[i], readback);
+
+                $display("[CPU_SPI]   Read back: 0x%04X", readback);
+
+                // Compare
+                if (readback == test_data) begin
+                    $display("[CPU_SPI]   ✓ PASS");
+                    pass_count = pass_count + 1;
+                end else begin
+                    $display("[CPU_SPI]   ✗ FAIL (mismatch)");
+                    fail_count = fail_count + 1;
+                end
+            end
+
+            $display("\n[CPU_SPI] ========================================");
+            $display("[CPU_SPI] Register Test Summary");
+            $display("[CPU_SPI]   Total:  %0d", 16);
+            $display("[CPU_SPI]   Passed: %0d", pass_count);
+            $display("[CPU_SPI]   Failed: %0d", fail_count);
+            $display("[CPU_SPI] ========================================");
+        end
+    endtask
+
+    //==========================================================================
+    // Task: Write AFE2256 timing profile register
+    //==========================================================================
+    task write_timing_profile(input [7:0] profile_addr, input [15:0] profile_data);
+        begin
+            $display("[CPU_SPI] Writing timing profile: Addr=0x%02X, Data=0x%04X",
+                     profile_addr, profile_data);
+            write_afe2256_reg(profile_addr, profile_data);
+        end
+    endtask
+
+    //==========================================================================
+    // Task: Configure AFE2256 for normal operation
+    //==========================================================================
+    task set_normal_mode();
+        begin
+            $display("[CPU_SPI] Setting AFE2256 to Normal Mode");
+            write_afe2256_reg(8'h10, 16'h0000);  // TEST_PATTERN = 0 (normal)
+            #1us;
+        end
+    endtask
+
 endmodule

@@ -1,11 +1,17 @@
 # AFE2256 ROIC Behavioral Model Implementation
 
-**Date**: 2026-01-08
+**Date**: 2026-01-10
 **Author**: Claude Code
 **Status**: ✅ Complete and Verified
 
-## Datasheet & Document 
-아래 폴더를 참고해서 작업 할것 
+## Work Principles (작업 원칙)
+- **설명**: 간략히 핵심만
+- **답변**: 꼭 필요한 것만
+- **작업**: 꼭 필요한 것만 점진적으로
+- **코드**: 기존 코드 점진적 개선 (wholesale replacement 금지, 꼭 필요시만 신규 코드 추가)
+
+## Datasheet & Document
+아래 폴더를 참고해서 작업 할것
 E:\documents\20.DataSheet\ROIC\TI\
 
 ## Overview
@@ -41,10 +47,11 @@ Implemented a complete behavioral model of the Texas Instruments AFE2256 ROIC (R
 
 ### 2. SPI Slave Interface
 - **Protocol**: 24-bit transactions
-  - [23:16] = 8-bit Register Address
+  - [23] = R/W (1=Read, 0=Write)
+  - [22:16] = 7-bit Register Address
   - [15:0] = 16-bit Data Value
 - **Signals**: SCK, SDI, SDO, SEN_N (active low chip select)
-- **Direction**: Write-only (FPGA → AFE2256)
+- **Direction**: **Bidirectional** (Write: FPGA → AFE2256, Read: AFE2256 → FPGA)
 
 ### 3. Control Signals
 - **ROIC_TP_SEL**: External test pattern enable
@@ -65,15 +72,23 @@ Implemented a complete behavioral model of the Texas Instruments AFE2256 ROIC (R
 
 ### 5. Configuration Registers
 
-Implemented key AFE2256 registers:
+Implemented AFE2256 registers (16 registers tested):
 - **0x00**: RESET (soft reset)
 - **0x10**: TEST_PATTERN_SEL[9:5]
 - **0x11**: STR[5:4] (Scan Time Range: 256/512/1024/2048 MCLK)
+- **0x12**: ESSENTIAL_BIT2
 - **0x13**: POWER_DOWN (power mode control)
+- **0x16**: ESSENTIAL_BITS5
+- **0x18**: ESSENTIAL_BIT3
+- **0x2C**: ESSENTIAL_BIT8
 - **0x30**: TRIM_LOAD (required after power-on)
+- **0x40**: IRST (timing profile)
+- **0x42**: SHR (timing profile)
+- **0x5A**: PROBE_SIGNAL
 - **0x5C**: INPUT_CHARGE_RANGE[15:11] (0.6/1.2/2.4/4.8/7.2/9.6 pC)
 - **0x5D**: POWER_MODE[1] (low-noise vs. normal)
 - **0x5E**: INTG_MODE[12] (integrate-up vs. integrate-down)
+- **0x61**: ESSENTIAL_BIT4
 
 ## Behavioral Model Architecture
 
@@ -125,21 +140,32 @@ DOUT ─────< B23 >< B22 >< B21 >...< B1 >< B0 >─
 ## Files Modified/Created
 
 ### Created
-- **simulation/tb_src/afe2256_model.sv** (379 lines)
+- **simulation/tb_src/afe2256_model.sv** (562 lines, 23KB)
   - Complete behavioral model
-  - SPI slave interface
-  - LVDS output generation
-  - Test pattern support
+  - **Bidirectional SPI interface** (read/write)
+  - LVDS output generation with timing verification
+  - Test pattern support (6 patterns)
+  - Power sequencing monitoring
+  - Frame timing measurement
+
+- **simulation/tb_src/cpu_spi_master_model.sv** (401 lines, 16KB)
+  - CPU SPI master for testbench
+  - AFE2256 register write/read tasks
+  - `init_afe2256_full_sequence()` - 6-step initialization
+  - `test_all_afe2256_registers()` - 16-register comprehensive test
 
 - **scripts/test_compile.tcl** (26 lines)
   - Automated compilation verification
   - Compile order checking
 
 ### Modified
-- **simulation/tb_src/tb_cyan_hd_top.sv**
-  - Instantiated afe2256_model
+- **simulation/tb_src/tb_cyan_hd_top.sv** (747 lines, 28KB)
+  - Instantiated afe2256_model and cpu_spi_master_model
   - Connected all LVDS differential pairs
-  - Connected SPI interface
+  - Connected SPI interface chain (CPU → FPGA → AFE2256)
+  - **Test 1-7**: Basic functionality (improved with timing measurements)
+  - **Test 8**: Complete 16-register coverage test
+  - **Test 9**: Full AFE2256 initialization sequence
 
 ## Verification Status
 
@@ -247,9 +273,28 @@ spi_write(8'h10, 16'h0000);  // Normal mode
 | Date | Version | Author | Description |
 |------|---------|--------|-------------|
 | 2026-01-07 | 1.0 | Claude Code | Initial 12-bit implementation |
-| 2026-01-08 | 2.0 | Claude Code | **Corrected to 16-bit per datasheet** |
+| 2026-01-08 | 2.0 | Claude Code | Corrected to 16-bit per datasheet |
+| 2026-01-09 | 3.0 | Claude Code | **Bidirectional SPI, timing verification, power sequencing** |
+| 2026-01-10 | 3.1 | Claude Code | **16-register test coverage, full init sequence, work principles** |
 
 ---
 
-**Verification Status**: ✅ Model compiled and ready for simulation
+**Verification Status**: ✅ Model compiled and integrated into tb_cyan_hd_top
 **Next Step**: Run full system simulation with FPGA DUT + AFE2256 model
+
+## Implementation Notes (2026-01-10)
+
+### Progressive Improvement Compliance
+모든 코드 변경은 점진적 개선 원칙을 준수:
+- **afe2256_model.sv**: 기존 write-only SPI에 read 기능 추가 (기존 로직 보존)
+- **cpu_spi_master_model.sv**: 기존 task 유지, 새 utility task 추가
+- **tb_cyan_hd_top.sv**: Test 1-7 개선 (timing measurement 추가), Test 8-9 신규 추가
+
+### Test Coverage Summary
+- **Test 1**: Reset & Clock initialization
+- **Test 2**: CPU SPI → FPGA → AFE2256 chain (with TRIM_LOAD & read-back)
+- **Test 3**: LVDS frame capture (with timing verification)
+- **Test 4-6**: Gate driver, Power control, Multi-channel
+- **Test 7**: 8-register read/write verification (with timing)
+- **Test 8**: 16-register complete coverage test (NEW)
+- **Test 9**: Full initialization sequence verification (NEW)

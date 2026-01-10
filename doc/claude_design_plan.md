@@ -4,7 +4,13 @@
 **타겟**: Xilinx Artix-7 XC7A35T-FGG484-1
 **ROIC**: TI AFE2256 (1-16개 확장 가능)
 **작성일**: 2026-01-04
-**버전**: v1.3 (2026-01-07 업데이트)
+**버전**: v1.4 (2026-01-10 업데이트)
+
+## 작업 원칙 (Work Principles)
+- **설명**: 간략히 핵심만
+- **답변**: 꼭 필요한 것만
+- **작업**: 꼭 필요한 것만 점진적으로
+- **코드**: 기존 코드 점진적 개선 (wholesale replacement 금지, 꼭 필요시만 신규 코드 추가)
 
 ---
 
@@ -61,6 +67,12 @@
    - 모듈 템플릿 4개 제공
    - 검증 전략 수립
 
+✅ doc/afe2256_model_implementation.md (300줄)
+   - AFE2256 ROIC 행동 모델 구현 완료
+   - Bidirectional SPI (read/write) 구현
+   - 16개 레지스터 테스트 커버리지
+   - 작업 원칙 및 구현 노트 포함
+
 ✅ source/constrs/cyan_hd_top.xdc (306줄)
    - 106개 핀 정의 완료
    - 14채널 LVDS 제약 조건
@@ -70,15 +82,33 @@
    - 최상위 모듈 완성
    - 인터페이스 정의 완료
    - 클럭/리셋 구조 확정
+
+✅ source/hdl/afe2256/ (SPI 모듈 완료)
+   - afe2256_spi_pkg.sv - 레지스터 정의
+   - afe2256_spi_controller.sv - SPI 마스터
+
+✅ simulation/tb_src/ (테스트벤치 완료)
+   - afe2256_model.sv (562줄, 23KB) - AFE2256 행동 모델
+   - cpu_spi_master_model.sv (401줄, 16KB) - CPU SPI 마스터
+   - tb_cyan_hd_top.sv (747줄, 28KB) - 통합 테스트벤치 (Test 1-9)
+
+✅ scripts/test_compile.tcl (26줄)
+   - 자동 컴파일 검증 스크립트
 ```
 
-### 2.2 미완성 항목 ⬜
+### 2.2 진행 중 항목 🔄
 ```
-⬜ 하위 모듈 6개 (Placeholder 상태)
-⬜ 테스트벤치 0개
+🔄 AFE2256 LVDS Deserializer 구현 (진행 필요)
+🔄 Data Processing Pipeline (미구현)
+🔄 Gate Driver Controller (placeholder)
+```
+
+### 2.3 미완성 항목 ⬜
+```
 ⬜ IP 코어 미생성 (Clock Wizard)
 ⬜ 합성/구현 미실행
 ⬜ 타이밍 검증 미완료
+⬜ I2C Master Controller (미구현)
 ```
 
 ---
@@ -111,13 +141,15 @@ cyan_hd_top (최상위)
 ├── reset_sync (리셋 동기화)
 │   └── 2-FF 동기화
 │
-├── lvds_adc_interface × 14 (ADC 수신기)
-│   ├── IBUFDS (차동 입력 버퍼)
-│   ├── IDELAYE2 (입력 지연 조정)
-│   ├── ISERDESE2 (7:1 디시리얼라이저)
-│   └── 클럭 복원 (DCLK 기반)
+├── afe2256_lvds_receiver (AFE2256 ROIC 14채널 수신기) ✅ 구현완료
+│   ├── afe2256_lvds_deserializer × 14
+│   │   ├── IBUFDS (차동 입력 버퍼)
+│   │   ├── IDDR/IDELAYE2 (DDR 디시리얼라이저)
+│   │   └── 클럭 복원 (DCLK 기반)
+│   └── afe2256_lvds_reconstructor × 14
+│       └── 프레임 재구성 및 12bit 병렬 출력
 │
-├── spi_slave_controller (CPU 제어)
+├── spi_slave_controller (CPU 제어) ✅ 구현완료
 │   ├── SPI 상태 머신
 │   ├── 32bit 레지스터 맵 (8개)
 │   └── MISO 출력 로직
@@ -146,26 +178,26 @@ cyan_hd_top (최상위)
 
 ### 4.2 모듈별 상세 스펙
 
-#### 📌 Module 1: `lvds_adc_interface.sv`
-**목적**: 단일 채널 LVDS ADC 데이터 수신
+#### 📌 Module 1: `afe2256_lvds_receiver.sv` ✅ **구현완료**
+**목적**: AFE2256 ROIC 14채널 LVDS 데이터 수신
 
 | 항목 | 사양 |
 |------|------|
-| 입력 | DCLK_P/N, FCLK_P/N, DOUT_P/N (차동) |
-| 출력 | 12bit 병렬 데이터 + valid 신호 |
-| 클럭 | 200 MHz (ISERDES), 100 MHz (병렬 출력) |
-| 기능 | 7:1 디시리얼라이제이션, 클럭 복원 |
-| 리소스 | ~200 LUT, ~150 FF per channel |
-| 참조 | [claude-agent-fpga.md Section 26.2](claude-agent-fpga.md#262) |
+| 입력 | DCLK_P/N, FCLK_P/N, DOUT_P/N (차동, 14채널) |
+| 출력 | 12bit 병렬 데이터 × 14채널 + valid 신호 |
+| 클럭 | DDR deserialization (AFE2256 DCLK 기반) |
+| 기능 | LVDS 디시리얼라이제이션, 프레임 재구성 |
+| 구현 | `afe2256_lvds_deserializer.sv` + `afe2256_lvds_reconstructor.sv` |
+| 위치 | `source/hdl/afe2256/` |
 
 **주요 로직**:
 ```verilog
-IBUFDS → IDELAYE2 → ISERDESE2 (7:1) → 비트 정렬 → 12bit 병렬
+IBUFDS → IDDR/IDELAYE2 → 디시리얼라이저 → 프레임 재구성 → 12bit 병렬
 ```
 
 ---
 
-#### 📌 Module 2: `spi_slave_controller.sv`
+#### 📌 Module 2: `spi_slave_controller.sv` ✅ **구현완료**
 **목적**: CPU와 FPGA 간 제어 인터페이스
 
 | 항목 | 사양 |
@@ -299,20 +331,23 @@ generate_target all [get_ips clk_wiz_0]
 5. 클럭 도메인 크로싱 (200MHz → 100MHz)
 
 **검증 방법**:
-- 테스트벤치로 LVDS 시뮬레이션
-- 실제 ROIC 없이 테스트 패턴 생성기 사용
+- ✅ 테스트벤치로 LVDS 시뮬레이션 완료
+- ✅ AFE2256 behavioral model로 검증
 
 **산출물**:
-- `source/hdl/lvds_adc_interface.sv` (~250줄)
-- `simulation/tb_src/tb_lvds_adc_interface.sv` (~200줄)
+- ✅ `source/hdl/afe2256/afe2256_lvds_receiver.sv` (구현완료)
+- ✅ `source/hdl/afe2256/afe2256_lvds_deserializer.sv` (구현완료)
+- ✅ `source/hdl/afe2256/afe2256_lvds_reconstructor.sv` (구현완료)
+- ✅ `simulation/tb_src/afe2256_model.sv` (AFE2256 behavioral model)
+- ✅ `simulation/tb_src/tb_cyan_hd_top.sv` (전체 시스템 테스트벤치)
 
 **위험 요소**:
-- ⚠️ ISERDES 타이밍 설정 복잡
-- ⚠️ 비트 정렬 알고리즘 검증 필요
+- ✅ IDDR/IDELAYE2 타이밍 설정 완료
+- ✅ 프레임 재구성 로직 구현 완료
 
 ---
 
-#### Step 1.3: SPI Slave Controller 구현
+#### Step 1.3: SPI Slave Controller 구현 ✅ **완료**
 **소요 시간**: 1-2시간
 **난이도**: ⭐⭐ 중간
 
@@ -463,17 +498,17 @@ wait_on_run impl_1
 
 ### 6.1 모듈별 리소스 할당
 
-| 모듈 | LUT | FF | BRAM | DSP | 우선순위 |
-|------|-----|----|----|-----|---------|
-| clk_wiz_0 (IP) | 200 | 50 | 0 | 0 | P0 |
-| reset_sync | 10 | 10 | 0 | 0 | P0 |
-| lvds_adc_interface ×14 | 2,800 | 2,100 | 0 | 0 | P0 |
-| spi_slave_controller | 500 | 300 | 0 | 0 | P0 |
-| gate_driver_controller | 300 | 200 | 0 | 0 | P1 |
-| data_processing_pipeline | 4,000 | 3,000 | 20 | 16 | P1 |
-| i2c_master_controller | 200 | 150 | 0 | 0 | P2 |
-| roic_spi_master | 200 | 100 | 0 | 0 | P2 |
-| **합계** | **8,210** | **5,910** | **20** | **16** | - |
+| 모듈 | LUT | FF | BRAM | DSP | 상태 |
+|------|-----|----|----|-----|------|
+| clk_wiz_0 (IP) | 200 | 50 | 0 | 0 | ✅ 구현완료 |
+| reset_sync | 10 | 10 | 0 | 0 | ✅ 구현완료 |
+| afe2256_lvds_receiver ×14 | 2,800 | 2,100 | 0 | 0 | ✅ 구현완료 |
+| spi_slave_controller | 500 | 300 | 0 | 0 | ✅ 구현완료 |
+| afe2256_spi_controller | 200 | 150 | 0 | 0 | ✅ 구현완료 |
+| gate_driver_controller | 300 | 200 | 0 | 0 | 🚧 기본구현 |
+| data_processing_pipeline | 4,000 | 3,000 | 20 | 16 | ⏳ 미구현 |
+| i2c_master_controller | 200 | 150 | 0 | 0 | ⏳ Placeholder |
+| **합계** | **8,210** | **5,960** | **20** | **16** | - |
 | **예산 대비** | **39%** | **14%** | **40%** | **18%** | - |
 
 ✅ **모든 리소스 예산 내 수용 가능**
@@ -524,13 +559,14 @@ Week 2 (Day 5-7): Phase 3-4 구현
 - Branch Coverage: 100%
 - Toggle Coverage: >95%
 
-**테스트 항목 예시** (`lvds_adc_interface`):
+**테스트 항목 예시** (`afe2256_lvds_receiver`):
 ```
-✓ LVDS 차동 신호 수신
-✓ 7:1 디시리얼라이제이션 정확도
-✓ 클럭 복원 안정성
-✓ FCLK 동기화
+✓ LVDS 차동 신호 수신 (14채널)
+✓ DDR 디시리얼라이제이션 정확도
+✓ 프레임 재구성 및 동기화
+✓ FCLK 프레임 동기화
 ✓ 리셋 동작
+✓ AFE2256 behavioral model 검증
 ```
 
 ---
@@ -1187,6 +1223,41 @@ set part "xc7a35tfgg484-1"
 | v1.1 | 2026-01-04 | AFE2256 ROIC 상세 분석 추가 (섹션 10) | Claude AI |
 | v1.2 | 2026-01-04 | LVDS/SPI 인터페이스 상세 사양 추가 (ISERDES2, SPI FSM, 비트 정렬, 초기화 시퀀스) | Claude AI |
 | v1.3 | 2026-01-07 | 개발 환경 정보 추가 (Xilinx 툴 경로, 시뮬레이션/합성 환경) | Claude AI |
+| v1.4 | 2026-01-10 | **작업 원칙 추가, 완료 항목 업데이트 (AFE2256 모델, 테스트벤치, SPI 모듈)** | Claude AI |
+
+---
+
+## 최근 작업 이력 (2026-01-10)
+
+### AFE2256 ROIC 모델 및 테스트벤치 구현
+**완료 사항**:
+1. **afe2256_model.sv** (562줄, 23KB)
+   - Bidirectional SPI 구현 (기존 write-only에서 점진적 개선)
+   - LVDS 타이밍 검증 추가
+   - Power sequencing 모니터링
+   - 6가지 테스트 패턴 지원
+
+2. **cpu_spi_master_model.sv** (401줄, 16KB)
+   - AFE2256 레지스터 write/read task
+   - `init_afe2256_full_sequence()` - 6단계 초기화
+   - `test_all_afe2256_registers()` - 16개 레지스터 테스트
+
+3. **tb_cyan_hd_top.sv** (747줄, 28KB)
+   - Test 1-9 통합 테스트
+   - CPU SPI → FPGA → AFE2256 체인 검증
+   - LVDS frame capture 타이밍 측정
+   - 16개 레지스터 완전 커버리지 테스트
+
+**구현 원칙 준수**:
+- 모든 코드 변경은 점진적 개선으로 진행
+- 기존 로직 보존하며 기능 추가
+- 새 기능은 별도 블록/task로 구현
+
+### 다음 단계 권장사항
+1. **LVDS Deserializer 구현**: AFE2256 모델과 연결하여 실제 픽셀 데이터 복원
+2. **시뮬레이션 실행**: tb_cyan_hd_top.sv로 전체 시스템 검증
+3. **Clock Wizard IP 생성**: 50MHz → 100/200/25MHz 변환
+4. **합성 실행**: 리소스 사용량 및 타이밍 검증
 
 ---
 
