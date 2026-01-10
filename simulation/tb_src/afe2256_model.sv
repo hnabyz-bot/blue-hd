@@ -66,6 +66,17 @@ module afe2256_model #(
     reg [4:0] test_pattern_sel;  // TEST_PATTERN_SEL[9:5]
     reg [1:0] operation_mode;  // 0=normal, 1=test, 2=sleep
 
+    // LVDS transmission state
+    reg frame_active;
+    integer pixel_count;
+    integer bit_count;
+
+    // LVDS clock and data
+    reg lvds_clk;
+    reg [15:0] current_pixel_data [0:13];
+    reg [7:0] current_header [0:13];
+    reg [23:0] current_serial_word [0:13];
+
     //==========================================================================
     // Power-on initialization
     //==========================================================================
@@ -88,6 +99,7 @@ module afe2256_model #(
         bit_count = 0;
         pixel_count = 0;
         frame_active = 0;
+        lvds_clk = 0;
 
         // Initialize LVDS outputs (idle state)
         DCLKP = 12'h000;
@@ -103,41 +115,74 @@ module afe2256_model #(
         FCLKN_12_13 = 2'b11;
         DOUTP_12_13 = 2'b00;
         DOUTN_12_13 = 2'b11;
+
+        // Initialize data arrays
+        for (int i = 0; i < 14; i++) begin
+            current_pixel_data[i] = 16'h0;
+            current_header[i] = 8'h0;
+            current_serial_word[i] = 24'h0;
+        end
     end
 
     //==========================================================================
     // SPI Slave Interface
     //==========================================================================
     // SPI Format: 24-bit transactions (per AFE2256 datasheet)
-    // [23:16] = Address (8 bits)
+    // [23]    = R/W (1=Read, 0=Write)
+    // [22:16] = Address (7 bits)
     // [15:0]  = Data (16 bits)
-    // Write-only protocol (no read operation)
+    // Bidirectional protocol with read capability
+
+    reg [15:0] spi_read_data;
+    reg spi_is_read;
 
     always @(posedge ROIC_SPI_SCK or posedge ROIC_SPI_SEN_N) begin
         if (ROIC_SPI_SEN_N) begin
             // CS deasserted - reset
             spi_bit_count <= 0;
             ROIC_SPI_SDO <= 1'bz;
+            spi_is_read <= 0;
         end else begin
-            // Shift in data on SCK rising edge
+            // Shift in command data on SCK rising edge
             spi_shift_reg <= {spi_shift_reg[22:0], ROIC_SPI_SDI};
             spi_bit_count <= spi_bit_count + 1;
 
-            // After 24 bits, process command
+            // After 8 bits (R/W + address), determine if read operation
+            if (spi_bit_count == 7) begin
+                spi_is_read <= spi_shift_reg[6];  // bit 23 -> shifted to bit 6 after 8 clocks
+                if (spi_shift_reg[6]) begin
+                    // Read operation - prepare data
+                    reg [6:0] read_addr;
+                    read_addr = spi_shift_reg[5:0] << 1 | ROIC_SPI_SDI;  // Capture last bit
+                    spi_read_data <= {config_regs[{1'b0, read_addr}], config_regs[{1'b0, read_addr} + 1]};
+                    $display("[AFE2256] SPI Read: Addr=0x%02X", read_addr);
+                end
+            end
+
+            // For read operations, shift out data on bits 8-23
+            if (spi_is_read && spi_bit_count >= 8) begin
+                ROIC_SPI_SDO <= spi_read_data[23 - spi_bit_count];
+            end else begin
+                ROIC_SPI_SDO <= 1'bz;
+            end
+
+            // After 24 bits, process write command if write operation
             if (spi_bit_count == 23) begin
-                process_spi_command(spi_shift_reg);
+                if (!spi_is_read) begin
+                    process_spi_command(spi_shift_reg);
+                end
                 spi_bit_count <= 0;
             end
         end
     end
 
-    // Process SPI command
+    // Process SPI command (Write operations only)
     task process_spi_command(input [23:0] cmd);
         reg [7:0] address;
         reg [15:0] data;
     begin
-        // AFE2256 format: [23:16]=Address, [15:0]=Data
-        address = cmd[23:16];
+        // AFE2256 format: [23]=R/W (0=Write), [22:16]=Address, [15:0]=Data
+        address = {1'b0, cmd[22:16]};
         data = cmd[15:0];
 
         // Store in config registers (split 16-bit data into 2 bytes)
@@ -231,25 +276,42 @@ module afe2256_model #(
     //==========================================================================
     // LVDS Data Output Generation
     //==========================================================================
-    // Triggered by SYNC signal
-    reg frame_active;
-    integer pixel_count;
-    integer bit_count;  // Bit counter for 24-bit serial output
-    reg [15:0] current_pixel_data [0:13];  // 16-bit pixel data for 14 channels
-    reg [7:0] current_header [0:13];       // 8-bit header for 14 channels
-    reg [23:0] current_serial_word [0:13]; // 24-bit word = 8-bit header + 16-bit data
 
     // Generate LVDS clocks when frame is active
+    // LVDS clock should be faster than MCLK0 for DDR data
+    integer mclk_edge_count = 0;
     always @(posedge ROIC_MCLK0) begin
-        if (ROIC_AVDD1 && ROIC_AVDD2) begin
-            // Power is on, generate clocks
-            if (frame_active) begin
-                // Toggle data clocks (200 MHz)
-                DCLKP <= ~DCLKP;
-                DCLKN <= ~DCLKN;
-                DCLKP_12_13 <= ~DCLKP_12_13;
-                DCLKN_12_13 <= ~DCLKN_12_13;
+        if (!ROIC_AVDD1 || !ROIC_AVDD2) begin
+            lvds_clk <= 1'b0;
+            mclk_edge_count = 0;
+        end else if (frame_active) begin
+            // Generate faster clock for LVDS (e.g., 2x MCLK0 = 50MHz)
+            lvds_clk <= ~lvds_clk;
+            if (mclk_edge_count < 3) begin
+                $display("[AFE2256] MCLK0 edge %0d, lvds_clk=%b, frame_active=%b",
+                         mclk_edge_count, ~lvds_clk, frame_active);
             end
+            mclk_edge_count = mclk_edge_count + 1;
+        end else begin
+            lvds_clk <= 1'b0;
+            if (mclk_edge_count > 0 && mclk_edge_count < 3) begin
+                $display("[AFE2256] MCLK0 running but frame_active=0");
+            end
+        end
+    end
+
+    // Drive DCLK outputs (combinational)
+    always @(*) begin
+        if (frame_active) begin
+            DCLKP = {12{lvds_clk}};
+            DCLKN = {12{~lvds_clk}};
+            DCLKP_12_13 = {2{lvds_clk}};
+            DCLKN_12_13 = {2{~lvds_clk}};
+        end else begin
+            DCLKP = 12'h000;
+            DCLKN = 12'hFFF;
+            DCLKP_12_13 = 2'b00;
+            DCLKN_12_13 = 2'b11;
         end
     end
 
@@ -279,10 +341,13 @@ module afe2256_model #(
     end
 
     // Generate pixel data (16-bit data + 8-bit header = 24 bits total per AFE2256 spec)
-    always @(posedge DCLKP[0]) begin
+    always @(posedge lvds_clk) begin
         if (frame_active) begin
             // At start of new pixel, generate data
             if (bit_count == 0) begin
+                if (pixel_count < 3) begin
+                    $display("[AFE2256] Pixel %0d data generation at time %0t", pixel_count, $time);
+                end
                 for (int ch = 0; ch < 14; ch++) begin
                     // Generate 16-bit pixel data
                     if (test_pattern_enable) begin

@@ -1,15 +1,17 @@
 //==============================================================================
 // File: afe2256_spi_controller.sv
 // Description: AFE2256 ROIC SPI Master Controller
-//              - 24-bit SPI protocol (8-bit addr + 16-bit data)
-//              - Write-only operation (Phase 1)
+//              - 24-bit SPI protocol: [23]=R/W, [22:16]=addr, [15:0]=data
+//              - Bidirectional operation (read/write)
 //              - CPOL=0, CPHA=0 (Mode 0)
 //              - MSB First transmission
 //              - 10 MHz SPI clock from 100 MHz system clock
 // Author: Claude Code
-// Date: 2026-01-06
-// Version: 1.1
+// Date: 2026-01-09
+// Version: 1.2
 //==============================================================================
+
+`timescale 1ns / 1ps
 
 module afe2256_spi_controller
     import afe2256_spi_pkg::*;
@@ -22,17 +24,18 @@ module afe2256_spi_controller
     input  wire clk,                   // System clock (100 MHz)
     input  wire rst_n,                 // Active LOW reset
 
-    // Register Write Interface
-    input  wire [7:0]  reg_addr,       // Register address (8-bit)
+    // Register Interface
+    input  wire [7:0]  reg_addr,       // Register address (7-bit, [7] is R/W)
     input  wire [15:0] reg_wdata,      // Write data (16-bit)
-    input  wire        reg_wr,         // Write request (1 cycle pulse)
+    input  wire        reg_wr,         // Transaction request (1 cycle pulse)
+    output reg  [15:0] reg_rdata,      // Read data (16-bit)
     output reg         busy,           // Controller busy flag
     output reg         done,           // Transfer done (1 cycle pulse)
 
     // SPI Physical Interface
     output reg                    spi_sck,   // SPI Clock (10 MHz)
     output reg                    spi_sdi,   // SPI Data Out (FPGA → ROIC)
-    input  wire [NUM_ROICS-1:0]   spi_sdo,   // SPI Data In (ROIC → FPGA, unused in Phase 1)
+    input  wire [NUM_ROICS-1:0]   spi_sdo,   // SPI Data In (ROIC → FPGA)
     output reg  [NUM_ROICS-1:0]   spi_sen_n  // Chip Select (Active LOW)
 );
 
@@ -69,6 +72,8 @@ module afe2256_spi_controller
     // Shift register
     reg [SPI_TOTAL_BITS-1:0] shift_reg;      // 24-bit shift register
     reg [4:0]                 bit_cnt;        // Bit counter (0-23)
+    reg [15:0]                read_data;      // Captured read data
+    reg                       is_read_op;     // Read operation flag
 
     // Control signals
     reg sen_n_int;                            // Internal SEN
@@ -168,6 +173,8 @@ module afe2256_spi_controller
         if (!rst_n) begin
             shift_reg <= '0;
             bit_cnt   <= '0;
+            read_data <= '0;
+            is_read_op <= '0;
         end else begin
             case (state)
                 IDLE: begin
@@ -175,19 +182,28 @@ module afe2256_spi_controller
                         // Load shift register with address and data (MSB first)
                         shift_reg <= {reg_addr, reg_wdata};
                         bit_cnt   <= '0;
+                        is_read_op <= reg_addr[7];  // Bit 7 indicates read
                     end
                 end
 
                 SHIFT: begin
-                    if (spi_clk_en && !sck_int) begin
-                        // Shift on falling edge (CPHA=0)
-                        shift_reg <= {shift_reg[SPI_TOTAL_BITS-2:0], 1'b0};
-                        bit_cnt   <= bit_cnt + 1'b1;
+                    if (spi_clk_en) begin
+                        if (!sck_int) begin
+                            // Shift on falling edge (CPHA=0) - output data
+                            shift_reg <= {shift_reg[SPI_TOTAL_BITS-2:0], 1'b0};
+                            bit_cnt   <= bit_cnt + 1'b1;
+                        end else if (is_read_op && bit_cnt >= 8) begin
+                            // Capture on rising edge for read operations (after address sent)
+                            read_data <= {read_data[14:0], spi_sdo[0]};
+                        end
                     end
                 end
 
                 LOAD: begin
                     bit_cnt <= '0;
+                    if (is_read_op) begin
+                        reg_rdata <= read_data;
+                    end
                 end
 
                 default: begin

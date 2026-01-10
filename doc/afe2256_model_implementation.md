@@ -4,6 +4,10 @@
 **Author**: Claude Code
 **Status**: ✅ Complete and Verified
 
+## Datasheet & Document 
+아래 폴더를 참고해서 작업 할것 
+E:\documents\20.DataSheet\ROIC\TI\
+
 ## Overview
 
 Implemented a complete behavioral model of the Texas Instruments AFE2256 ROIC (Readout Integrated Circuit) for system-level simulation and verification of the Cyan HD FPGA design.

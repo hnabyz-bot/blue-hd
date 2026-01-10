@@ -276,6 +276,7 @@ module cyan_hd_top (
     wire       afe2256_spi_done;
     wire [7:0] afe2256_reg_addr;
     wire [15:0] afe2256_reg_wdata;
+    wire [15:0] afe2256_reg_rdata;
     wire       afe2256_reg_wr;
 
     afe2256_spi_controller #(
@@ -287,9 +288,10 @@ module cyan_hd_top (
         .clk           (clk_100mhz),
         .rst_n         (rst_n_sync),
 
-        // Register write interface
+        // Register interface
         .reg_addr      (afe2256_reg_addr),
         .reg_wdata     (afe2256_reg_wdata),
+        .reg_rdata     (afe2256_reg_rdata),
         .reg_wr        (afe2256_reg_wr),
         .busy          (afe2256_spi_busy),
         .done          (afe2256_spi_done),
@@ -301,11 +303,11 @@ module cyan_hd_top (
         .spi_sen_n     (ROIC_SPI_SEN_N)
     );
 
-    // TODO: Add AFE2256 initialization FSM
-    // Placeholder: Tie off for now
-    assign afe2256_reg_addr = ctrl_reg0[7:0];
-    assign afe2256_reg_wdata = ctrl_reg0[23:8];
-    assign afe2256_reg_wr = ctrl_reg0[31];
+    // AFE2256 SPI Register Interface
+    // ctrl_reg0[31]=trigger, [23]=R/W, [22:16]=addr, [15:0]=data
+    assign afe2256_reg_addr = ctrl_reg0[23:16];   // [23]=R/W, [22:16]=7-bit addr
+    assign afe2256_reg_wdata = ctrl_reg0[15:0];   // Write data
+    assign afe2256_reg_wr = ctrl_reg0[31];         // Transaction trigger
 
     //==========================================================================
     // Module: SPI Slave Interface (CPU to FPGA)
@@ -475,6 +477,13 @@ module cyan_hd_top (
         2'h0                               // [1:0] Reserved
     };
 
+    assign status_reg1 = {
+        afe2256_spi_busy,                  // [31] AFE2256 SPI busy
+        afe2256_spi_done,                  // [30] AFE2256 SPI done
+        14'h0,                             // [29:16] Reserved
+        afe2256_reg_rdata                  // [15:0] AFE2256 read data
+    };
+
     // SPI TX data (example: send first ADC channel data)
     assign spi_tx_data = {20'h0, adc_data[0]};
 
@@ -530,15 +539,71 @@ module spi_slave_controller (
     input  wire [31:0] tx_data,
     output wire        tx_ready
 );
-    // TODO: Implement SPI slave state machine
-    // See AXI4-Lite slave template in Section 25.5.2 for reference
+    // Bidirectional SPI slave implementation
+    // Write: receives 32-bit data and stores in ctrl_reg0
+    // Read: outputs status_reg1 on MISO
 
-    assign spi_miso = 1'b0;
-    assign ctrl_reg0 = 32'h0;
-    assign ctrl_reg1 = 32'h0;
-    assign rx_data = 32'h0;
-    assign rx_valid = 1'b0;
+    reg [31:0] ctrl_reg0_r;
+    reg [31:0] ctrl_reg1_r;
+    reg [31:0] shift_reg_in;
+    reg [31:0] shift_reg_out;
+    reg [5:0] bit_count;
+    reg [31:0] rx_data_r;
+    reg rx_valid_r;
+    reg miso_r;
+
+    // SPI slave - shift in/out data on spi_sclk
+    always @(posedge spi_sclk or posedge spi_ssb) begin
+        if (spi_ssb) begin
+            // CS deasserted - reset
+            bit_count <= 6'd0;
+            shift_reg_in <= 32'h0;
+            shift_reg_out <= status_reg1;  // Load status for read
+        end else begin
+            // Shift in data on rising edge (MSB first)
+            shift_reg_in <= {shift_reg_in[30:0], spi_mosi};
+            // Shift out data on rising edge (for MISO)
+            shift_reg_out <= {shift_reg_out[30:0], 1'b0};
+            bit_count <= bit_count + 1'b1;
+        end
+    end
+
+    // MISO output - drive MSB of shift_reg_out
+    always @(negedge spi_sclk or posedge spi_ssb) begin
+        if (spi_ssb) begin
+            miso_r <= 1'b0;
+        end else begin
+            // Update MISO on falling edge (CPHA=0)
+            miso_r <= shift_reg_out[31];
+        end
+    end
+
+    // Latch received data when transaction completes
+    always @(posedge spi_ssb or negedge rst_n) begin
+        if (!rst_n) begin
+            ctrl_reg0_r <= 32'h0006_0001;  // Default: power on
+            ctrl_reg1_r <= 32'h0;
+            rx_data_r <= 32'h0;
+            rx_valid_r <= 1'b0;
+        end else begin
+            // Transaction complete
+            if (bit_count == 32) begin
+                ctrl_reg0_r <= shift_reg_in;
+                rx_data_r <= shift_reg_in;
+                rx_valid_r <= 1'b1;
+            end else begin
+                rx_valid_r <= 1'b0;
+            end
+        end
+    end
+
+    assign ctrl_reg0 = ctrl_reg0_r;
+    assign ctrl_reg1 = ctrl_reg1_r;
+    assign rx_data = rx_data_r;
+    assign rx_valid = rx_valid_r;
+    assign spi_miso = miso_r;
     assign tx_ready = 1'b1;
+
 endmodule
 
 // Gate Driver Controller
@@ -552,8 +617,11 @@ module gate_driver_controller (
     output reg  oe_enable,
     output reg  frame_done
 );
-    // TODO: Implement gate driver timing FSM
-    // See Section 25.5.4 for FSM template
+    // Temporary implementation: Generate periodic STV pulse for testing
+    // TODO: Implement full gate driver timing FSM
+
+    reg [15:0] frame_counter;
+    localparam FRAME_PERIOD = 16'd500;  // ~20us at 25MHz (50 frames/sec)
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -561,12 +629,20 @@ module gate_driver_controller (
             cpv_pulse <= 1'b0;
             oe_enable <= 1'b0;
             frame_done <= 1'b0;
+            frame_counter <= 16'd0;
         end else begin
-            // Placeholder: toggle signals for testing
-            stv_pulse <= enable;
-            cpv_pulse <= enable;
-            oe_enable <= enable;
-            frame_done <= 1'b0;
+            // Generate periodic frame pulses for testing
+            if (frame_counter < FRAME_PERIOD) begin
+                frame_counter <= frame_counter + 1'b1;
+                stv_pulse <= 1'b0;
+            end else begin
+                frame_counter <= 16'd0;
+                stv_pulse <= 1'b1;  // One-cycle pulse
+            end
+
+            cpv_pulse <= 1'b0;  // Not used in initial test
+            oe_enable <= 1'b1;  // Always enabled for testing
+            frame_done <= stv_pulse;
         end
     end
 endmodule

@@ -1,0 +1,921 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_cyan_hd_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="afe2256_lvds_pkg" />
+            <top_module name="afe2256_spi_pkg" />
+            <top_module name="glbl" />
+            <top_module name="tb_cyan_hd_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="125.855131 us"></ZoomEndTime>
+      <Cursor1Time time="53.049291 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="276"></NameColumnWidth>
+      <ValueColumnWidth column_width="108"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="224" />
+   <wvobject fp_name="/tb_cyan_hd_top/MCLK_50M_p" type="logic">
+      <obj_property name="ElementShortName">MCLK_50M_p</obj_property>
+      <obj_property name="ObjectShortName">MCLK_50M_p</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/MCLK_50M_n" type="logic">
+      <obj_property name="ElementShortName">MCLK_50M_n</obj_property>
+      <obj_property name="ObjectShortName">MCLK_50M_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/nRST" type="logic">
+      <obj_property name="ElementShortName">nRST</obj_property>
+      <obj_property name="ObjectShortName">nRST</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/scl_out" type="logic">
+      <obj_property name="ElementShortName">scl_out</obj_property>
+      <obj_property name="ObjectShortName">scl_out</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/sda" type="logic">
+      <obj_property name="ElementShortName">sda</obj_property>
+      <obj_property name="ObjectShortName">sda</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_TP_SEL" type="logic">
+      <obj_property name="ElementShortName">ROIC_TP_SEL</obj_property>
+      <obj_property name="ObjectShortName">ROIC_TP_SEL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_SYNC" type="logic">
+      <obj_property name="ElementShortName">ROIC_SYNC</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SYNC</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_MCLK0" type="logic">
+      <obj_property name="ElementShortName">ROIC_MCLK0</obj_property>
+      <obj_property name="ObjectShortName">ROIC_MCLK0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_AVDD1" type="logic">
+      <obj_property name="ElementShortName">ROIC_AVDD1</obj_property>
+      <obj_property name="ObjectShortName">ROIC_AVDD1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_AVDD2" type="logic">
+      <obj_property name="ElementShortName">ROIC_AVDD2</obj_property>
+      <obj_property name="ObjectShortName">ROIC_AVDD2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_SPI_SCK" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SCK</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SCK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_SPI_SDI" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SDI</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SDI</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_SPI_SDO" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SDO</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SDO</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/ROIC_SPI_SEN_N" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SEN_N</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SEN_N</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_L" type="logic">
+      <obj_property name="ElementShortName">GF_STV_L</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_L</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_R" type="logic">
+      <obj_property name="ElementShortName">GF_STV_R</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_R</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR1" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR1</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR2" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR2</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR3" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR3</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR3</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR4" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR4</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR4</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR5" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR5</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR5</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR6" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR6</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR6</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR7" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR7</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR7</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_STV_LR8" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR8</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_CPV" type="logic">
+      <obj_property name="ElementShortName">GF_CPV</obj_property>
+      <obj_property name="ObjectShortName">GF_CPV</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_OE" type="logic">
+      <obj_property name="ElementShortName">GF_OE</obj_property>
+      <obj_property name="ObjectShortName">GF_OE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_1" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_1</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_2" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_2</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_3" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_3</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_3</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_4" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_4</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_4</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_5" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_5</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_5</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_6" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_6</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_6</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_7" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_7</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_7</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/GF_XAO_8" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_8</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DCLKP" type="array">
+      <obj_property name="ElementShortName">DCLKP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DCLKP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DCLKN" type="array">
+      <obj_property name="ElementShortName">DCLKN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DCLKN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/FCLKP" type="array">
+      <obj_property name="ElementShortName">FCLKP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">FCLKP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/FCLKN" type="array">
+      <obj_property name="ElementShortName">FCLKN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">FCLKN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DOUTP" type="array">
+      <obj_property name="ElementShortName">DOUTP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DOUTP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DOUTN" type="array">
+      <obj_property name="ElementShortName">DOUTN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DOUTN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DCLKP_12_13" type="array">
+      <obj_property name="ElementShortName">DCLKP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DCLKP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DCLKN_12_13" type="array">
+      <obj_property name="ElementShortName">DCLKN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DCLKN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/FCLKP_12_13" type="array">
+      <obj_property name="ElementShortName">FCLKP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">FCLKP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/FCLKN_12_13" type="array">
+      <obj_property name="ElementShortName">FCLKN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">FCLKN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DOUTP_12_13" type="array">
+      <obj_property name="ElementShortName">DOUTP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DOUTP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/DOUTN_12_13" type="array">
+      <obj_property name="ElementShortName">DOUTN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DOUTN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_clk_hs_p" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_hs_p</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_hs_p</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_clk_hs_n" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_hs_n</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_hs_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_data_hs_p" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_hs_p[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_hs_p[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_data_hs_n" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_hs_n[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_hs_n[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_clk_lp_p" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_lp_p</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_lp_p</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_clk_lp_n" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_lp_n</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_lp_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_data_lp_p" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_lp_p[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_lp_p[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/mipi_phy_if_data_lp_n" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_lp_n[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_lp_n[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/SSB" type="logic">
+      <obj_property name="ElementShortName">SSB</obj_property>
+      <obj_property name="ObjectShortName">SSB</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/SCLK" type="logic">
+      <obj_property name="ElementShortName">SCLK</obj_property>
+      <obj_property name="ObjectShortName">SCLK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/MOSI" type="logic">
+      <obj_property name="ElementShortName">MOSI</obj_property>
+      <obj_property name="ObjectShortName">MOSI</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/MISO" type="logic">
+      <obj_property name="ElementShortName">MISO</obj_property>
+      <obj_property name="ObjectShortName">MISO</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/STATE_LED1" type="logic">
+      <obj_property name="ElementShortName">STATE_LED1</obj_property>
+      <obj_property name="ObjectShortName">STATE_LED1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/STATE_LED2" type="logic">
+      <obj_property name="ElementShortName">STATE_LED2</obj_property>
+      <obj_property name="ObjectShortName">STATE_LED2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/exp_ack" type="logic">
+      <obj_property name="ElementShortName">exp_ack</obj_property>
+      <obj_property name="ObjectShortName">exp_ack</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/exp_req" type="logic">
+      <obj_property name="ElementShortName">exp_req</obj_property>
+      <obj_property name="ObjectShortName">exp_req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/prep_ack" type="logic">
+      <obj_property name="ElementShortName">prep_ack</obj_property>
+      <obj_property name="ObjectShortName">prep_ack</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/test_count" type="array">
+      <obj_property name="ElementShortName">test_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">test_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/error_count" type="array">
+      <obj_property name="ElementShortName">error_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">error_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/CLK_50M_PERIOD" type="other">
+      <obj_property name="ElementShortName">CLK_50M_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">CLK_50M_PERIOD</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/CLK_100M_PERIOD" type="other">
+      <obj_property name="ElementShortName">CLK_100M_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">CLK_100M_PERIOD</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/LVDS_CLK_PERIOD" type="other">
+      <obj_property name="ElementShortName">LVDS_CLK_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">LVDS_CLK_PERIOD</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider69">
+      <obj_property name="label">afe model</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_TP_SEL" type="logic">
+      <obj_property name="ElementShortName">ROIC_TP_SEL</obj_property>
+      <obj_property name="ObjectShortName">ROIC_TP_SEL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_SYNC" type="logic">
+      <obj_property name="ElementShortName">ROIC_SYNC</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SYNC</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_MCLK0" type="logic">
+      <obj_property name="ElementShortName">ROIC_MCLK0</obj_property>
+      <obj_property name="ObjectShortName">ROIC_MCLK0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_AVDD1" type="logic">
+      <obj_property name="ElementShortName">ROIC_AVDD1</obj_property>
+      <obj_property name="ObjectShortName">ROIC_AVDD1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_AVDD2" type="logic">
+      <obj_property name="ElementShortName">ROIC_AVDD2</obj_property>
+      <obj_property name="ObjectShortName">ROIC_AVDD2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_SPI_SCK" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SCK</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SCK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_SPI_SDI" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SDI</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SDI</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_SPI_SDO" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SDO</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SDO</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ROIC_SPI_SEN_N" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SEN_N</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SEN_N</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DCLKP" type="array">
+      <obj_property name="ElementShortName">DCLKP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DCLKP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DCLKN" type="array">
+      <obj_property name="ElementShortName">DCLKN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DCLKN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/FCLKP" type="array">
+      <obj_property name="ElementShortName">FCLKP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">FCLKP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/FCLKN" type="array">
+      <obj_property name="ElementShortName">FCLKN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">FCLKN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DOUTP" type="array">
+      <obj_property name="ElementShortName">DOUTP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DOUTP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DOUTN" type="array">
+      <obj_property name="ElementShortName">DOUTN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DOUTN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DCLKP_12_13" type="array">
+      <obj_property name="ElementShortName">DCLKP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DCLKP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DCLKN_12_13" type="array">
+      <obj_property name="ElementShortName">DCLKN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DCLKN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/FCLKP_12_13" type="array">
+      <obj_property name="ElementShortName">FCLKP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">FCLKP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/FCLKN_12_13" type="array">
+      <obj_property name="ElementShortName">FCLKN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">FCLKN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DOUTP_12_13" type="array">
+      <obj_property name="ElementShortName">DOUTP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DOUTP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/DOUTN_12_13" type="array">
+      <obj_property name="ElementShortName">DOUTN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DOUTN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/spi_shift_reg" type="array">
+      <obj_property name="ElementShortName">spi_shift_reg[23:0]</obj_property>
+      <obj_property name="ObjectShortName">spi_shift_reg[23:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/spi_bit_count" type="array">
+      <obj_property name="ElementShortName">spi_bit_count[7:0]</obj_property>
+      <obj_property name="ObjectShortName">spi_bit_count[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/config_regs" type="array">
+      <obj_property name="ElementShortName">config_regs[0:255][7:0]</obj_property>
+      <obj_property name="ObjectShortName">config_regs[0:255][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/test_pattern_value" type="array">
+      <obj_property name="ElementShortName">test_pattern_value[15:0]</obj_property>
+      <obj_property name="ObjectShortName">test_pattern_value[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/test_pattern_enable" type="logic">
+      <obj_property name="ElementShortName">test_pattern_enable</obj_property>
+      <obj_property name="ObjectShortName">test_pattern_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/test_pattern_sel" type="array">
+      <obj_property name="ElementShortName">test_pattern_sel[4:0]</obj_property>
+      <obj_property name="ObjectShortName">test_pattern_sel[4:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/operation_mode" type="array">
+      <obj_property name="ElementShortName">operation_mode[1:0]</obj_property>
+      <obj_property name="ObjectShortName">operation_mode[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/frame_active" type="logic">
+      <obj_property name="ElementShortName">frame_active</obj_property>
+      <obj_property name="ObjectShortName">frame_active</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/pixel_count" type="array">
+      <obj_property name="ElementShortName">pixel_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pixel_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/bit_count" type="array">
+      <obj_property name="ElementShortName">bit_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">bit_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/current_pixel_data" type="array">
+      <obj_property name="ElementShortName">current_pixel_data[0:13][15:0]</obj_property>
+      <obj_property name="ObjectShortName">current_pixel_data[0:13][15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/current_header" type="array">
+      <obj_property name="ElementShortName">current_header[0:13][7:0]</obj_property>
+      <obj_property name="ObjectShortName">current_header[0:13][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/current_serial_word" type="array">
+      <obj_property name="ElementShortName">current_serial_word[0:13][23:0]</obj_property>
+      <obj_property name="ObjectShortName">current_serial_word[0:13][23:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/lvds_clk" type="logic">
+      <obj_property name="ElementShortName">lvds_clk</obj_property>
+      <obj_property name="ObjectShortName">lvds_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/NUM_CHANNELS" type="array">
+      <obj_property name="ElementShortName">NUM_CHANNELS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">NUM_CHANNELS[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/PIXEL_WIDTH" type="array">
+      <obj_property name="ElementShortName">PIXEL_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PIXEL_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/HEADER_WIDTH" type="array">
+      <obj_property name="ElementShortName">HEADER_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">HEADER_WIDTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/PIXELS_PER_CHANNEL" type="array">
+      <obj_property name="ElementShortName">PIXELS_PER_CHANNEL[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PIXELS_PER_CHANNEL[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_RESET" type="array">
+      <obj_property name="ElementShortName">ADDR_RESET[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_RESET[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_TEST_PATTERN" type="array">
+      <obj_property name="ElementShortName">ADDR_TEST_PATTERN[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_TEST_PATTERN[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_STR" type="array">
+      <obj_property name="ElementShortName">ADDR_STR[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_STR[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_POWER_DOWN" type="array">
+      <obj_property name="ElementShortName">ADDR_POWER_DOWN[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_POWER_DOWN[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_TRIM_LOAD" type="array">
+      <obj_property name="ElementShortName">ADDR_TRIM_LOAD[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_TRIM_LOAD[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_INPUT_RANGE" type="array">
+      <obj_property name="ElementShortName">ADDR_INPUT_RANGE[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_INPUT_RANGE[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_POWER_MODE" type="array">
+      <obj_property name="ElementShortName">ADDR_POWER_MODE[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_POWER_MODE[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/afe_model/ADDR_INTG_MODE" type="array">
+      <obj_property name="ElementShortName">ADDR_INTG_MODE[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_INTG_MODE[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider70">
+      <obj_property name="label">dut</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/MCLK_50M_p" type="logic">
+      <obj_property name="ElementShortName">MCLK_50M_p</obj_property>
+      <obj_property name="ObjectShortName">MCLK_50M_p</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/MCLK_50M_n" type="logic">
+      <obj_property name="ElementShortName">MCLK_50M_n</obj_property>
+      <obj_property name="ObjectShortName">MCLK_50M_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/nRST" type="logic">
+      <obj_property name="ElementShortName">nRST</obj_property>
+      <obj_property name="ObjectShortName">nRST</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/scl_out" type="logic">
+      <obj_property name="ElementShortName">scl_out</obj_property>
+      <obj_property name="ObjectShortName">scl_out</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/sda" type="logic">
+      <obj_property name="ElementShortName">sda</obj_property>
+      <obj_property name="ObjectShortName">sda</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_TP_SEL" type="logic">
+      <obj_property name="ElementShortName">ROIC_TP_SEL</obj_property>
+      <obj_property name="ObjectShortName">ROIC_TP_SEL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_SYNC" type="logic">
+      <obj_property name="ElementShortName">ROIC_SYNC</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SYNC</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_MCLK0" type="logic">
+      <obj_property name="ElementShortName">ROIC_MCLK0</obj_property>
+      <obj_property name="ObjectShortName">ROIC_MCLK0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_AVDD1" type="logic">
+      <obj_property name="ElementShortName">ROIC_AVDD1</obj_property>
+      <obj_property name="ObjectShortName">ROIC_AVDD1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_AVDD2" type="logic">
+      <obj_property name="ElementShortName">ROIC_AVDD2</obj_property>
+      <obj_property name="ObjectShortName">ROIC_AVDD2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_SPI_SCK" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SCK</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SCK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_SPI_SDI" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SDI</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SDI</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_SPI_SDO" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SDO</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SDO</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ROIC_SPI_SEN_N" type="logic">
+      <obj_property name="ElementShortName">ROIC_SPI_SEN_N</obj_property>
+      <obj_property name="ObjectShortName">ROIC_SPI_SEN_N</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_L" type="logic">
+      <obj_property name="ElementShortName">GF_STV_L</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_L</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_R" type="logic">
+      <obj_property name="ElementShortName">GF_STV_R</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_R</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR1" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR1</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR2" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR2</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR3" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR3</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR3</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR4" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR4</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR4</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR5" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR5</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR5</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR6" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR6</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR6</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR7" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR7</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR7</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_STV_LR8" type="logic">
+      <obj_property name="ElementShortName">GF_STV_LR8</obj_property>
+      <obj_property name="ObjectShortName">GF_STV_LR8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_CPV" type="logic">
+      <obj_property name="ElementShortName">GF_CPV</obj_property>
+      <obj_property name="ObjectShortName">GF_CPV</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_OE" type="logic">
+      <obj_property name="ElementShortName">GF_OE</obj_property>
+      <obj_property name="ObjectShortName">GF_OE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_1" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_1</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_2" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_2</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_3" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_3</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_3</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_4" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_4</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_4</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_5" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_5</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_5</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_6" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_6</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_6</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_7" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_7</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_7</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/GF_XAO_8" type="logic">
+      <obj_property name="ElementShortName">GF_XAO_8</obj_property>
+      <obj_property name="ObjectShortName">GF_XAO_8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DCLKP" type="array">
+      <obj_property name="ElementShortName">DCLKP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DCLKP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DCLKN" type="array">
+      <obj_property name="ElementShortName">DCLKN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DCLKN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/FCLKP" type="array">
+      <obj_property name="ElementShortName">FCLKP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">FCLKP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/FCLKN" type="array">
+      <obj_property name="ElementShortName">FCLKN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">FCLKN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DOUTP" type="array">
+      <obj_property name="ElementShortName">DOUTP[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DOUTP[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DOUTN" type="array">
+      <obj_property name="ElementShortName">DOUTN[0:11]</obj_property>
+      <obj_property name="ObjectShortName">DOUTN[0:11]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DCLKP_12_13" type="array">
+      <obj_property name="ElementShortName">DCLKP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DCLKP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DCLKN_12_13" type="array">
+      <obj_property name="ElementShortName">DCLKN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DCLKN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/FCLKP_12_13" type="array">
+      <obj_property name="ElementShortName">FCLKP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">FCLKP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/FCLKN_12_13" type="array">
+      <obj_property name="ElementShortName">FCLKN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">FCLKN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DOUTP_12_13" type="array">
+      <obj_property name="ElementShortName">DOUTP_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DOUTP_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/DOUTN_12_13" type="array">
+      <obj_property name="ElementShortName">DOUTN_12_13[12:13]</obj_property>
+      <obj_property name="ObjectShortName">DOUTN_12_13[12:13]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_clk_hs_p" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_hs_p</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_hs_p</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_clk_hs_n" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_hs_n</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_hs_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_data_hs_p" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_hs_p[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_hs_p[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_data_hs_n" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_hs_n[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_hs_n[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_clk_lp_p" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_lp_p</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_lp_p</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_clk_lp_n" type="logic">
+      <obj_property name="ElementShortName">mipi_phy_if_clk_lp_n</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_clk_lp_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_data_lp_p" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_lp_p[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_lp_p[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_phy_if_data_lp_n" type="array">
+      <obj_property name="ElementShortName">mipi_phy_if_data_lp_n[3:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_phy_if_data_lp_n[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/SSB" type="logic">
+      <obj_property name="ElementShortName">SSB</obj_property>
+      <obj_property name="ObjectShortName">SSB</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/SCLK" type="logic">
+      <obj_property name="ElementShortName">SCLK</obj_property>
+      <obj_property name="ObjectShortName">SCLK</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/MOSI" type="logic">
+      <obj_property name="ElementShortName">MOSI</obj_property>
+      <obj_property name="ObjectShortName">MOSI</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/MISO" type="logic">
+      <obj_property name="ElementShortName">MISO</obj_property>
+      <obj_property name="ObjectShortName">MISO</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/STATE_LED1" type="logic">
+      <obj_property name="ElementShortName">STATE_LED1</obj_property>
+      <obj_property name="ObjectShortName">STATE_LED1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/STATE_LED2" type="logic">
+      <obj_property name="ElementShortName">STATE_LED2</obj_property>
+      <obj_property name="ObjectShortName">STATE_LED2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/exp_ack" type="logic">
+      <obj_property name="ElementShortName">exp_ack</obj_property>
+      <obj_property name="ObjectShortName">exp_ack</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/exp_req" type="logic">
+      <obj_property name="ElementShortName">exp_req</obj_property>
+      <obj_property name="ObjectShortName">exp_req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/prep_ack" type="logic">
+      <obj_property name="ElementShortName">prep_ack</obj_property>
+      <obj_property name="ObjectShortName">prep_ack</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/prep_req" type="logic">
+      <obj_property name="ElementShortName">prep_req</obj_property>
+      <obj_property name="ObjectShortName">prep_req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/clk_100mhz" type="logic">
+      <obj_property name="ElementShortName">clk_100mhz</obj_property>
+      <obj_property name="ObjectShortName">clk_100mhz</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/clk_200mhz" type="logic">
+      <obj_property name="ElementShortName">clk_200mhz</obj_property>
+      <obj_property name="ObjectShortName">clk_200mhz</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/clk_25mhz" type="logic">
+      <obj_property name="ElementShortName">clk_25mhz</obj_property>
+      <obj_property name="ObjectShortName">clk_25mhz</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mmcm_locked" type="logic">
+      <obj_property name="ElementShortName">mmcm_locked</obj_property>
+      <obj_property name="ObjectShortName">mmcm_locked</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/rst_n_sync" type="logic">
+      <obj_property name="ElementShortName">rst_n_sync</obj_property>
+      <obj_property name="ObjectShortName">rst_n_sync</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/adc_data" type="array">
+      <obj_property name="ElementShortName">adc_data[13:0][11:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_data[13:0][11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/adc_dclk_int" type="array">
+      <obj_property name="ElementShortName">adc_dclk_int[13:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_dclk_int[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/adc_fclk_int" type="array">
+      <obj_property name="ElementShortName">adc_fclk_int[13:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_fclk_int[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/adc_data_valid" type="array">
+      <obj_property name="ElementShortName">adc_data_valid[13:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_data_valid[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/spi_rx_data" type="array">
+      <obj_property name="ElementShortName">spi_rx_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">spi_rx_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/spi_tx_data" type="array">
+      <obj_property name="ElementShortName">spi_tx_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">spi_tx_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/spi_rx_valid" type="logic">
+      <obj_property name="ElementShortName">spi_rx_valid</obj_property>
+      <obj_property name="ObjectShortName">spi_rx_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/spi_tx_ready" type="logic">
+      <obj_property name="ElementShortName">spi_tx_ready</obj_property>
+      <obj_property name="ObjectShortName">spi_tx_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ctrl_reg0" type="array">
+      <obj_property name="ElementShortName">ctrl_reg0[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ctrl_reg0[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/ctrl_reg1" type="array">
+      <obj_property name="ElementShortName">ctrl_reg1[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ctrl_reg1[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/status_reg0" type="array">
+      <obj_property name="ElementShortName">status_reg0[31:0]</obj_property>
+      <obj_property name="ObjectShortName">status_reg0[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/status_reg1" type="array">
+      <obj_property name="ElementShortName">status_reg1[31:0]</obj_property>
+      <obj_property name="ObjectShortName">status_reg1[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/gf_stv_pulse" type="logic">
+      <obj_property name="ElementShortName">gf_stv_pulse</obj_property>
+      <obj_property name="ObjectShortName">gf_stv_pulse</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/gf_cpv_pulse" type="logic">
+      <obj_property name="ElementShortName">gf_cpv_pulse</obj_property>
+      <obj_property name="ObjectShortName">gf_cpv_pulse</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/gf_oe_enable" type="logic">
+      <obj_property name="ElementShortName">gf_oe_enable</obj_property>
+      <obj_property name="ObjectShortName">gf_oe_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_pixel_data" type="array">
+      <obj_property name="ElementShortName">mipi_pixel_data[63:0]</obj_property>
+      <obj_property name="ObjectShortName">mipi_pixel_data[63:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_frame_valid" type="logic">
+      <obj_property name="ElementShortName">mipi_frame_valid</obj_property>
+      <obj_property name="ObjectShortName">mipi_frame_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/mipi_line_valid" type="logic">
+      <obj_property name="ElementShortName">mipi_line_valid</obj_property>
+      <obj_property name="ObjectShortName">mipi_line_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_pixel_data" type="array">
+      <obj_property name="ElementShortName">afe2256_pixel_data[13:0][11:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_pixel_data[13:0][11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_align_vector" type="array">
+      <obj_property name="ElementShortName">afe2256_align_vector[13:0][11:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_align_vector[13:0][11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_pixel_valid" type="array">
+      <obj_property name="ElementShortName">afe2256_pixel_valid[13:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_pixel_valid[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_line_start" type="array">
+      <obj_property name="ElementShortName">afe2256_line_start[13:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_line_start[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_frame_start" type="array">
+      <obj_property name="ElementShortName">afe2256_frame_start[13:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_frame_start[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_ch_locked" type="array">
+      <obj_property name="ElementShortName">afe2256_ch_locked[13:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_ch_locked[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_ch_aligned" type="array">
+      <obj_property name="ElementShortName">afe2256_ch_aligned[13:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_ch_aligned[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_ch_errors" type="array">
+      <obj_property name="ElementShortName">afe2256_ch_errors[13:0][3:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_ch_errors[13:0][3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/dclk_p_combined" type="array">
+      <obj_property name="ElementShortName">dclk_p_combined[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dclk_p_combined[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/dclk_n_combined" type="array">
+      <obj_property name="ElementShortName">dclk_n_combined[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dclk_n_combined[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/fclk_p_combined" type="array">
+      <obj_property name="ElementShortName">fclk_p_combined[13:0]</obj_property>
+      <obj_property name="ObjectShortName">fclk_p_combined[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/fclk_n_combined" type="array">
+      <obj_property name="ElementShortName">fclk_n_combined[13:0]</obj_property>
+      <obj_property name="ObjectShortName">fclk_n_combined[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/dout_p_combined" type="array">
+      <obj_property name="ElementShortName">dout_p_combined[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dout_p_combined[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/dout_n_combined" type="array">
+      <obj_property name="ElementShortName">dout_n_combined[13:0]</obj_property>
+      <obj_property name="ObjectShortName">dout_n_combined[13:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_spi_busy" type="logic">
+      <obj_property name="ElementShortName">afe2256_spi_busy</obj_property>
+      <obj_property name="ObjectShortName">afe2256_spi_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_spi_done" type="logic">
+      <obj_property name="ElementShortName">afe2256_spi_done</obj_property>
+      <obj_property name="ObjectShortName">afe2256_spi_done</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_reg_addr" type="array">
+      <obj_property name="ElementShortName">afe2256_reg_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_reg_addr[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_reg_wdata" type="array">
+      <obj_property name="ElementShortName">afe2256_reg_wdata[15:0]</obj_property>
+      <obj_property name="ObjectShortName">afe2256_reg_wdata[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/afe2256_reg_wr" type="logic">
+      <obj_property name="ElementShortName">afe2256_reg_wr</obj_property>
+      <obj_property name="ObjectShortName">afe2256_reg_wr</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_cyan_hd_top/dut/led_counter" type="array">
+      <obj_property name="ElementShortName">led_counter[25:0]</obj_property>
+      <obj_property name="ObjectShortName">led_counter[25:0]</obj_property>
+   </wvobject>
+</wave_config>
